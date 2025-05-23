@@ -113,9 +113,16 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
-    import {
-      getFirestore, doc, setDoc, updateDoc, increment
-    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+   import {
+              getFirestore,
+              doc,
+              setDoc,
+              getDoc,
+              updateDoc,
+              increment
+          } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+
 
     const firebaseConfig = {
       apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
@@ -141,10 +148,11 @@
 
     document.getElementById("welcomeText").innerText =
       `ยินดีต้อนรับ: ${voterName}${isAdmin ? " (Admin - ไม่สามารถโหวตได้)" : ""}`;
-
+//เพิ่มชื่อ
     const candidates = [];
     candidates.push({ id: 1, name: "ซาร่า", info: "นักฟุตบอลอาชีพ", image: "Mohamed_Salah_2018.jpg" });
-    for (let i = 2; i <= 150; i++) {
+    candidates.push({ id: 2, name: "ซอน", info: "นักฟุตบอลอาชีพ", image: "f.jpg" });
+    for (let i = 3; i <= 150; i++) {
       candidates.push({
         id: i,
         name: `ผู้สมัคร ${i}`,
@@ -180,25 +188,34 @@
       }
     });
 
+   
+
+
+
     window.vote = async function(candidateId) {
       if (isAdmin || voted) return;
 
+      const voterRef = doc(db, "voters", voterName.toLowerCase());
+      const voterDoc = await getDoc(voterRef);
+
+      if (voterDoc.exists()) {
+        alert("คุณได้โหวตไปแล้ว ไม่สามารถโหวตซ้ำได้อีก");
+        return;
+      }
+
       const candidateRef = doc(db, "votes", candidateId.toString());
-       try {
+      try {
         await updateDoc(candidateRef, { count: increment(1) });
-        } catch (e) {
-         await setDoc(candidateRef, { count: 1 });
-        }
+      } catch (e) {
+        await setDoc(candidateRef, { count: 1 });
+      }
 
-        // ✅ บันทึกผู้โหวต
-        const voterRef = doc(db, "voters", voterName.toLowerCase());
-        await setDoc(voterRef, { voted: candidateId });
+      await setDoc(voterRef, { voted: candidateId });
 
-        localStorage.setItem("voted", candidateId);
-        alert("โหวตสำเร็จ!");
-        location.reload();
+      localStorage.setItem("voted", candidateId);
+      alert("โหวตสำเร็จ!");
+      location.reload();
     };
-
 
     window.logout = function () {
       localStorage.removeItem("voterName");
