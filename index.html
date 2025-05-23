@@ -120,12 +120,12 @@
 
     document.getElementById("welcomeText").innerText =
       `ยินดีต้อนรับ: ${voterName}${isAdmin ? " (Admin - ไม่สามารถโหวตได้)" : ""}`;
-
+//เพิ่มคนตรงนี้
     const candidates = [];
     candidates.push({ id: 1, name: "ซาร่า", info: "นักฟุตบอลอาชีพ", image: "Mohamed_Salah_2018.jpg" });
-
-    for (let i = 2; i <= 150; i++) {
-      candidates.push({ id: i, name: `ผู้สมัคร ${i}`, info: `นโยบายของผู้สมัครหมายเลข ${i}`, image: "../assets/eth5.jpg" });
+    candidates.push({ id: 2, name: "ซอน", info: "นักฟุตบอลอาชีพ", image: "f.jpg" });
+    for (let i = 3; i <= 150; i++) {
+      candidates.push({ id: i, name: `ผู้สมัคร ${i}`, info: `นโยบายของผู้สมัครหมายเลข ${i}`, image: "" });
     }
 
     const grid = document.getElementById("candidateGrid");
