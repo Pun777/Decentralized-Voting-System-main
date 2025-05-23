@@ -225,18 +225,21 @@
       if (!isHidden || isAdmin) lb.appendChild(row);
 
       // Infographic (Top 10 ไม่ถูกซ่อน)
-      if (i < 10 && !isHidden) {
-        const card = document.createElement("div");
-        card.className = "info-card";
-        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
-        card.innerHTML = `
-          ${medal ? `<div class="medal">${medal}</div>` : ''}
-          <img src="${c.image}" alt="">
-          <h3>${c.name}</h3>
-          <p>${c.percent}% (${c.voteCount} คะแนน)</p>
-        `;
+      const visibleTop10 = candidates.filter(c => !hidden.includes(c.id)).slice(0, 10);
+
+      visibleTop10.forEach((c, index) => {
+      const card = document.createElement("div");
+      card.className = "info-card";
+      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+      card.innerHTML = `
+       ${medal ? `<div class="medal">${medal}</div>` : ''}
+        <img src="${c.image}" alt="">
+        <h3>${c.name}</h3>
+        <p>${c.percent}% (${c.voteCount} คะแนน)</p>
+      `;
         ig.appendChild(card);
-      }
+      });
+
     });
 
     // ปุ่มคืนค่าทั้งหมด

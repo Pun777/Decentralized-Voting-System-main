@@ -114,34 +114,44 @@
     const voterName = localStorage.getItem("voterName");
     const isAdmin = localStorage.getItem("isAdmin") === "true";
     const voted = localStorage.getItem("voted");
+    const hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
 
     if (!voterName) window.location.href = "login.html";
+
     document.getElementById("welcomeText").innerText =
       `ยินดีต้อนรับ: ${voterName}${isAdmin ? " (Admin - ไม่สามารถโหวตได้)" : ""}`;
 
     const candidates = [];
     candidates.push({ id: 1, name: "ซาร่า", info: "นักฟุตบอลอาชีพ", image: "Mohamed_Salah_2018.jpg" });
+
     for (let i = 2; i <= 150; i++) {
       candidates.push({ id: i, name: `ผู้สมัคร ${i}`, info: `นโยบายของผู้สมัครหมายเลข ${i}`, image: "../assets/eth5.jpg" });
     }
 
-    const container = document.getElementById("candidateGrid");
+    const grid = document.getElementById("candidateGrid");
     candidates.forEach(c => {
+      const isHidden = hidden.includes(c.id);
       const div = document.createElement("div");
       div.className = "card";
+
       div.innerHTML = `
         <img src="${c.image}" alt="${c.name}" />
         <h3>${c.name}</h3>
         <p>${c.info}</p>
         ${
           isAdmin
-            ? `<p style="color:red;"><em>Admin ไม่สามารถโหวตได้</em></p>`
+            ? (isHidden
+              ? `<button onclick="unhideCandidate(${c.id})">♻️ คืนค่า</button>`
+              : `<button onclick="hideCandidate(${c.id})">🗑️ ซ่อน</button>`)
             : voted
               ? `<button disabled>โหวตแล้ว</button>`
               : `<button onclick="vote(${c.id})">โหวต</button>`
         }
       `;
-      container.appendChild(div);
+
+      if (!isHidden || isAdmin) {
+        grid.appendChild(div);
+      }
     });
 
     function vote(candidateId) {
@@ -176,6 +186,20 @@
         const name = card.querySelector("h3").textContent.toLowerCase();
         card.style.display = name.includes(query) ? "block" : "none";
       });
+    }
+
+    function hideCandidate(id) {
+      const hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
+      if (!hidden.includes(id)) hidden.push(id);
+      localStorage.setItem("hiddenCandidates", JSON.stringify(hidden));
+      location.reload();
+    }
+
+    function unhideCandidate(id) {
+      let hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
+      hidden = hidden.filter(cid => cid !== id);
+      localStorage.setItem("hiddenCandidates", JSON.stringify(hidden));
+      location.reload();
     }
   </script>
 </body>
