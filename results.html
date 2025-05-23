@@ -7,274 +7,114 @@
   <style>
     body {
       font-family: "Segoe UI", sans-serif;
-      background-color: #2b2b2b;
+      background-color: #1e1e1e;
       color: white;
       margin: 0;
       padding: 0;
     }
-
-    header {
-      text-align: center;
+    header { text-align: center; padding: 20px; }
+    .results {
+      max-width: 800px;
+      margin: auto;
       padding: 20px;
     }
-
-    .nav {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-    }
-
-    .nav a {
-      padding: 10px 15px;
-      background: #6c63ff;
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-      font-weight: bold;
-    }
-
-    .mode-toggle {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .mode-toggle button {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 6px;
-      background: #007bff;
-      color: white;
-      cursor: pointer;
-    }
-
-    .mode-toggle button:hover {
-      background: #0056b3;
-    }
-
-    .leaderboard, .infographic {
-      display: none;
-      max-width: 1000px;
-      margin: auto;
-    }
-
-    .candidate-row {
+    .result-card {
+      background: #333;
+      border-radius: 10px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      background: #3a3a3a;
+      gap: 15px;
       padding: 10px 15px;
-      border-radius: 10px;
-      margin: 8px 0;
-      flex-wrap: wrap;
-      box-shadow: 0 0 5px rgba(0,0,0,0.4);
-    }
-
-    .candidate-row img {
-      width: 50px;
-      height: 50px;
-      border-radius: 6px;
-      object-fit: cover;
-      margin-right: 10px;
-    }
-
-    .candidate-info {
-      flex: 1;
-      font-size: 16px;
-    }
-
-    .vote-percent {
-      background: red;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-weight: bold;
-      min-width: 70px;
-      text-align: center;
-    }
-
-    .infographic {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .info-card {
-      background: #3a3a3a;
-      border-radius: 10px;
-      padding: 20px;
-      width: 100%;
-      max-width: 280px;
-      text-align: center;
-      margin: 10px;
-      position: relative;
-      box-shadow: 0 0 8px rgba(0,0,0,0.3);
-    }
-
-    .info-card img {
-      width: 100px;
-      height: 100px;
-      border-radius: 6px;
-      object-fit: cover;
       margin-bottom: 10px;
-      border: 3px solid #007bff;
     }
-
-    .info-card h3 {
-      margin: 0;
-      font-size: 18px;
+    .result-card img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
     }
-
-    .info-card p {
-      margin: 5px 0;
+    .name {
+      flex: 1;
+    }
+    .percent {
+      background: red;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
       font-weight: bold;
-      color: #dc3545;
-    }
-
-    .medal {
-      position: absolute;
-      top: -10px;
-      right: -10px;
-      font-size: 20px;
-    }
-
-    @media (max-width: 600px) {
-      .candidate-row {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .info-card {
-        width: 90%;
-      }
     }
   </style>
 </head>
 <body>
-
   <header>
-    <h1>📊 ผลการโหวต</h1>
+    <h1>📊 ผลการโหวต (เรียลไทม์)</h1>
   </header>
 
-  <div class="nav">
-    <a href="login.html">🔐 กลับหน้าล็อคอิน</a>
-    <a href="index.html">🗳️ กลับหน้าโหวต</a>
-  </div>
+  <div class="results" id="resultsList"></div>
 
-  <div class="mode-toggle">
-    <button onclick="switchView('leaderboard')">📋 Leaderboard</button>
-    <button onclick="switchView('infographic')">🧾 Infographic</button>
-  </div>
+  <!-- ✅ Firebase SDK + Real-time Vote Display -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+    import {
+      getFirestore, collection, onSnapshot
+    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-  <div id="leaderboard" class="leaderboard"></div>
-  <div id="infographic" class="infographic"></div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
+      authDomain: "votingproject-44e22.firebaseapp.com",
+      projectId: "votingproject-44e22",
+      storageBucket: "votingproject-44e22.firebasestorage.app",
+      messagingSenderId: "448413445889",
+      appId: "1:448413445889:web:0d22e92eed2a09d94ff500",
+      measurementId: "G-G6PT9V31VW"
+    };
 
- <script>
-  const voterName = localStorage.getItem("voterName");
-  const isAdmin = localStorage.getItem("isAdmin") === "true";
-  const votes = JSON.parse(localStorage.getItem("votes") || "{}");
-  const hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
-//เพิ่มคนตรงนี้
-  const candidates = [];
-  candidates.push({ id: 1, name: "ซาร่า", image: "Mohamed_Salah_2018.jpg" });
-  candidates.push({ id: 2, name: "ซอน", image: "f.jpg" });
-  for (let i = 3; i <= 150; i++) {
-    candidates.push({ id: i, name: `ผู้สมัคร ${i}`, image: "" });
-  }
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
 
-  let totalVotes = 0;
-  candidates.forEach(c => {
-    c.voteCount = votes[c.id] || 0;
-    totalVotes += c.voteCount;
-  });
+    // Mock candidates data (ID ต้องตรงกับใน index.html)
+    const candidates = [];
+    candidates.push({ id: 1, name: "ซาร่า", image: "Mohamed_Salah_2018.jpg" });
+    for (let i = 2; i <= 150; i++) {
+      candidates.push({
+        id: i,
+        name: `ผู้สมัคร ${i}`,
+        image: `https://via.placeholder.com/300x200?text=Candidate+${i}`
+      });
+    }
 
-  candidates.forEach(c => {
-    c.percent = totalVotes > 0 ? ((c.voteCount / totalVotes) * 100).toFixed(2) : "0.00";
-  });
+    const resultsRef = collection(db, "votes");
+    const container = document.getElementById("resultsList");
 
-  candidates.sort((a, b) => b.voteCount - a.voteCount);
-
-  function buildViews() {
-    const lb = document.getElementById("leaderboard");
-    const ig = document.getElementById("infographic");
-
-    lb.innerHTML = '';
-    ig.innerHTML = '';
-
-    candidates.forEach((c, i) => {
-      const isHidden = hidden.includes(c.id);
-
-      // Leaderboard
-      const row = document.createElement("div");
-      row.className = "candidate-row";
-      row.innerHTML = `
-        <strong>#${i + 1}</strong>
-        <img src="${c.image}" alt="">
-        <div class="candidate-info">${c.name}</div>
-        <div class="vote-percent">${c.percent}%</div>
-        ${
-          isAdmin
-            ? (!isHidden
-              ? `<button onclick="hideCandidate(${c.id})">🗑️ ซ่อน</button>`
-              : `<button onclick="unhideCandidate(${c.id})">♻️ คืน</button>`)
-            : ""
-        }
-      `;
-      if (!isHidden || isAdmin) lb.appendChild(row);
-
-      // Infographic (Top 10 ไม่ถูกซ่อน)
-      const visibleTop10 = candidates.filter(c => !hidden.includes(c.id)).slice(0, 10);
-
-      visibleTop10.forEach((c, index) => {
-      const card = document.createElement("div");
-      card.className = "info-card";
-      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
-      card.innerHTML = `
-       ${medal ? `<div class="medal">${medal}</div>` : ''}
-        <img src="${c.image}" alt="">
-        <h3>${c.name}</h3>
-        <p>${c.percent}% (${c.voteCount} คะแนน)</p>
-      `;
-        ig.appendChild(card);
+    onSnapshot(resultsRef, (snapshot) => {
+      const results = {};
+      snapshot.forEach(doc => {
+        results[doc.id] = doc.data().count;
       });
 
+      const totalVotes = Object.values(results).reduce((a, b) => a + b, 0);
+      const sorted = Object.entries(results).sort(([, a], [, b]) => b - a);
+
+      container.innerHTML = "";
+      sorted.forEach(([idStr, count], index) => {
+        const id = parseInt(idStr);
+        const candidate = candidates.find(c => c.id === id);
+        if (!candidate) return;
+        const percent = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(2) : "0.00";
+
+        const row = document.createElement("div");
+        row.className = "result-card";
+        row.innerHTML = `
+          <img src="${candidate.image}" />
+          <div class="name">#${index + 1} ${candidate.name}</div>
+          <div class="percent">${percent}%</div>
+        `;
+        container.appendChild(row);
+      });
     });
+  </script>
+</body>
+</html>
 
-    // ปุ่มคืนค่าทั้งหมด
-    if (isAdmin && hidden.length > 0) {
-      const btn = document.createElement("button");
-      btn.textContent = "♻️ แสดงผู้สมัครทั้งหมด";
-      btn.onclick = () => {
-        localStorage.removeItem("hiddenCandidates");
-        buildViews();
-      };
-      btn.style = "margin-top: 20px; padding: 10px 15px; background:#28a745; color:white; border:none; border-radius:6px; cursor:pointer;";
-      lb.appendChild(btn);
-    }
-  }
-
-  function hideCandidate(id) {
-    const h = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
-    if (!h.includes(id)) h.push(id);
-    localStorage.setItem("hiddenCandidates", JSON.stringify(h));
-    buildViews();
-  }
-
-  function unhideCandidate(id) {
-    let h = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
-    h = h.filter(x => x !== id);
-    localStorage.setItem("hiddenCandidates", JSON.stringify(h));
-    buildViews();
-  }
-
-  function switchView(view) {
-    document.getElementById("leaderboard").style.display = view === "leaderboard" ? "block" : "none";
-    document.getElementById("infographic").style.display = view === "infographic" ? "flex" : "none";
-  }
-
-  buildViews();
-  switchView("leaderboard");
-</script>

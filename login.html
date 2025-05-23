@@ -3,31 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>เข้าสู่ระบบ</title>
+  <title>เข้าสู่ระบบ - ระบบโหวต</title>
   <style>
+    :root {
+      --primary: #007bff;
+      --dark-bg: #1e1e1e;
+      --white: #ffffff;
+      --gray: #ccc;
+    }
+
     body {
       margin: 0;
       font-family: "Segoe UI", sans-serif;
-      background-color: #2b2b2b;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      color: var(--dark-bg);
     }
 
     .login-box {
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      background-color: var(--white);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
       width: 100%;
       max-width: 400px;
       text-align: center;
+      transition: 0.3s ease;
     }
 
     .login-box h1 {
-      margin-bottom: 10px;
-      font-size: 24px;
+      margin-bottom: 8px;
+      font-size: 28px;
+      color: #222;
     }
 
     .login-box p {
@@ -36,62 +46,107 @@
       color: #555;
     }
 
-    input[type="text"] {
+    .login-box input[type="text"] {
       width: 100%;
       padding: 12px;
       font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 15px;
+      border: 1px solid var(--gray);
+      border-radius: 8px;
+      margin-bottom: 20px;
       box-sizing: border-box;
+      transition: 0.2s;
     }
 
-    button {
+    .login-box input[type="text"]:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+    }
+
+    .login-box button {
       width: 100%;
       padding: 12px;
-      background-color: #007bff;
+      background-color: var(--primary);
       border: none;
-      border-radius: 6px;
-      color: white;
+      border-radius: 8px;
+      color: var(--white);
       font-size: 16px;
       cursor: pointer;
+      transition: background-color 0.2s;
     }
 
-    button:hover {
+    .login-box button:hover {
       background-color: #0056b3;
     }
 
-    @media (max-width: 500px) {
+    .error {
+      color: red;
+      font-size: 13px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    @media (max-width: 480px) {
       .login-box {
-        padding: 20px;
-        border-radius: 10px;
+        padding: 25px;
+        border-radius: 12px;
       }
     }
   </style>
 </head>
 <body>
   <div class="login-box">
-    <h1>🗳️ ระบบโหวต </h1>
-    <p>กรุณาใส่ชื่อ</p>
+    <h1>🗳️ ระบบโหวต</h1>
+    <p>กรุณากรอกชื่อของคุณเพื่อเข้าสู่ระบบ</p>
     <form onsubmit="goToVoting(event)">
-      <input type="text" id="name" placeholder="Your Name" required />
-      <button type="submit">Login</button>
+      <input type="text" id="name" placeholder="ชื่อของคุณ" autocomplete="off" />
+      <div id="errorText" class="error">กรุณากรอกชื่อ</div>
+      <button type="submit">เข้าสู่ระบบ</button>
     </form>
   </div>
+
+  <!-- Optional: Firebase SDK (ไม่จำเป็นสำหรับ local login) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
+      authDomain: "votingproject-44e22.firebaseapp.com",
+      projectId: "votingproject-44e22",
+      storageBucket: "votingproject-44e22.firebasestorage.app",
+      messagingSenderId: "448413445889",
+      appId: "1:448413445889:web:0d22e92eed2a09d94ff500",
+      measurementId: "G-G6PT9V31VW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
 
   <script>
     function goToVoting(event) {
       event.preventDefault();
-      const name = document.getElementById("name").value.trim();
-      if (name) {
-        localStorage.setItem("voterName", name);
-        if (name.toLowerCase() === "admin") {
-          localStorage.setItem("isAdmin", "true");
-        } else {
-          localStorage.removeItem("isAdmin");
-        }
-        window.location.href = "index.html";
+      const nameInput = document.getElementById("name");
+      const errorText = document.getElementById("errorText");
+      const name = nameInput.value.trim();
+
+      if (!name) {
+        errorText.style.display = "block";
+        nameInput.focus();
+        return;
       }
+
+      errorText.style.display = "none";
+      localStorage.setItem("voterName", name);
+
+      if (name.toLowerCase() === "admin") {
+        localStorage.setItem("isAdmin", "true");
+      } else {
+        localStorage.removeItem("isAdmin");
+      }
+
+      window.location.href = "index.html";
     }
   </script>
 </body>
