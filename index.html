@@ -184,16 +184,21 @@
       if (isAdmin || voted) return;
 
       const candidateRef = doc(db, "votes", candidateId.toString());
-      try {
+       try {
         await updateDoc(candidateRef, { count: increment(1) });
-      } catch (e) {
-        await setDoc(candidateRef, { count: 1 });
-      }
+        } catch (e) {
+         await setDoc(candidateRef, { count: 1 });
+        }
 
-      localStorage.setItem("voted", candidateId);
-      alert("โหวตสำเร็จ!");
-      location.reload();
+        // ✅ บันทึกผู้โหวต
+        const voterRef = doc(db, "voters", voterName.toLowerCase());
+        await setDoc(voterRef, { voted: candidateId });
+
+        localStorage.setItem("voted", candidateId);
+        alert("โหวตสำเร็จ!");
+        location.reload();
     };
+
 
     window.logout = function () {
       localStorage.removeItem("voterName");
