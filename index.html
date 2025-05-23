@@ -1,193 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Voting Page</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ลงคะแนนโหวต</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #2b2b2b;
+      color: white;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      background: url("jj.png") no-repeat center center fixed;
-      background-size: cover;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
     }
 
-    h1 {
-      color: rgb(20, 20, 20);
-      margin-top: 40px;
-      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.993);
+    header {
+      text-align: center;
+      padding: 20px;
     }
 
-    .candidate-grid {
+    .actions {
       display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
       justify-content: center;
-      background-color: rgba(253, 248, 248, 0);
-      padding: 30px;
-      margin: 20px;
-      border-radius: 10px;
-      max-width: 1200px;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
-    .candidate-card {
-      width: 250px;
-      border: 1px solid #0f0f0f;
-      border-radius: 10px;
-      padding: 15px;
-      background-color: #fff;
-      box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .candidate-card img {
-      width: 100%;
-      border-radius: 8px;
-    }
-
-    .vote-btn {
-      margin-top: 10px;
-      padding: 8px 12px;
-      font-size: 14px;
-    }
-
-    #accountAddress {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #161414;
-      text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
-    }
-
-    #logoutBtn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
+    .actions button {
       padding: 10px 15px;
       font-size: 14px;
-      background-color: #dc3545;
-      color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      z-index: 1000;
     }
 
-    #logoutBtn:hover {
-      background-color: #c82333;
+    .results-btn { background: #007bff; color: white; }
+    .logout-btn { background: #dc3545; color: white; }
+
+    .search-box {
+      text-align: center;
+      margin-bottom: 20px;
     }
 
-    #searchInput {
+    .search-box input {
       padding: 10px;
       font-size: 16px;
       width: 300px;
       border-radius: 6px;
       border: 1px solid #ccc;
-      margin: 15px 0;
     }
 
-    #result-button-wrapper button {
-      padding: 10px 20px;
-      font-size: 14px;
-      background-color: #007bff;
-      color: white;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: #3a3a3a;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .card img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .card h3 { margin: 0; font-size: 18px; }
+    .card p { font-size: 14px; margin: 8px 0; }
+
+    .card button {
+      padding: 8px 16px;
+      background: white;
+      color: black;
       border: none;
       border-radius: 6px;
+      font-weight: bold;
       cursor: pointer;
-      margin-bottom: 15px;
     }
 
-    #result-button-wrapper button:hover {
-      background-color: #0056b3;
+    .card button:disabled {
+      background: gray;
+      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
+  <header>
+    <h1>🗳️ ลงคะแนนโหวต</h1>
+    <p id="welcomeText"></p>
+  </header>
 
-  <button id="logoutBtn" onclick="logout()">🔙 ออกจากระบบ</button>
+  <div class="actions">
+    <button class="results-btn" onclick="location.href='results.html'">📊 ดูผลคะแนน</button>
+    <button class="logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
+  </div>
 
-  <h1>🗳️ ลงคะแนนโหวต</h1>
-  <p id="accountAddress"></p>
+  <div class="search-box">
+    <input type="text" placeholder="🔍 ค้นหาชื่อผู้สมัคร..." oninput="filterCards()" id="searchInput" />
+  </div>
 
-  <div id="result-button-wrapper"></div>
-
-  <input
-    type="text"
-    id="searchInput"
-    placeholder="🔍 ค้นหาชื่อผู้สมัคร..."
-    oninput="filterCandidates()"
-  />
-
-  <div id="candidate-list" class="candidate-grid"></div>
+  <div class="grid" id="candidateGrid"></div>
 
   <script>
     const voterName = localStorage.getItem("voterName");
     const isAdmin = localStorage.getItem("isAdmin") === "true";
-    const hasVoted = !!localStorage.getItem("voted");
+    const voted = localStorage.getItem("voted");
 
     if (!voterName) window.location.href = "login.html";
+    document.getElementById("welcomeText").innerText =
+      `ยินดีต้อนรับ: ${voterName}${isAdmin ? " (Admin - ไม่สามารถโหวตได้)" : ""}`;
 
-    document.getElementById("accountAddress").innerText =
-      isAdmin
-        ? "ยินดีต้อนรับ: admin (Admin - ไม่สามารถโหวตได้)"
-        : "ยินดีต้อนรับ: " + voterName;
-
-    // 🔘 ปุ่มดูผลคะแนน
-    const resultBtnWrapper = document.getElementById("result-button-wrapper");
-    const resultBtn = document.createElement("button");
-    resultBtn.textContent = "📊 ดูผลคะแนน";
-    resultBtn.onclick = () => window.location.href = "results.html";
-    resultBtnWrapper.appendChild(resultBtn);
-
-    // 👤 รายชื่อผู้สมัคร
     const candidates = [];
-
-    // ➤ ซาร่า เป็นผู้สมัครคนที่ 1
-    candidates.push({
-      id: 1,
-      name: "ซาร่า",
-      info: "นักฟุตบอลอาชีพ",
-      image: "Mohamed_Salah_2018.jpg"
-    });
-
-    // ➤ ผู้สมัครที่ 2 ถึง 150
+    candidates.push({ id: 1, name: "ซาร่า", info: "นักฟุตบอลอาชีพ", image: "Mohamed_Salah_2018.jpg" });
     for (let i = 2; i <= 150; i++) {
-      candidates.push({
-        id: i,
-        name: `ผู้สมัคร ${i}`,
-        info: `นโยบายของผู้สมัครหมายเลข ${i}`,
-        image: "../assets/eth5.jpg"
-      });
+      candidates.push({ id: i, name: `ผู้สมัคร ${i}`, info: `นโยบายของผู้สมัครหมายเลข ${i}`, image: "../assets/eth5.jpg" });
     }
 
-    const container = document.getElementById("candidate-list");
-    candidates.forEach(candidate => {
-      const card = document.createElement("div");
-      card.className = "candidate-card";
-      card.innerHTML = `
-        <img src="${candidate.image}" />
-        <h3>${candidate.name}</h3>
-        <p>${candidate.info}</p>
+    const container = document.getElementById("candidateGrid");
+    candidates.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <img src="${c.image}" alt="${c.name}" />
+        <h3>${c.name}</h3>
+        <p>${c.info}</p>
         ${
           isAdmin
             ? `<p style="color:red;"><em>Admin ไม่สามารถโหวตได้</em></p>`
-            : hasVoted
-              ? `<button class="vote-btn" disabled>คุณได้โหวตแล้ว</button>`
-              : `<button class="vote-btn" onclick="vote(${candidate.id})">โหวต</button>`
+            : voted
+              ? `<button disabled>โหวตแล้ว</button>`
+              : `<button onclick="vote(${c.id})">โหวต</button>`
         }
       `;
-      container.appendChild(card);
+      container.appendChild(div);
     });
 
     function vote(candidateId) {
-      if (isAdmin || hasVoted) return;
+      if (isAdmin || voted) return;
 
       const votes = JSON.parse(localStorage.getItem("votes") || "{}");
       votes[candidateId] = (votes[candidateId] || 0) + 1;
@@ -211,9 +169,9 @@
       window.location.href = "login.html";
     }
 
-    function filterCandidates() {
+    function filterCards() {
       const query = document.getElementById("searchInput").value.toLowerCase();
-      const cards = document.querySelectorAll(".candidate-card");
+      const cards = document.querySelectorAll(".card");
       cards.forEach(card => {
         const name = card.querySelector("h3").textContent.toLowerCase();
         card.style.display = name.includes(query) ? "block" : "none";

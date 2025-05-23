@@ -1,81 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>เข้าสู่ระบบ</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-      height: 100vh;
-      background: url("jj.png") no-repeat center center fixed;
-      background-size: cover;
+      font-family: "Segoe UI", sans-serif;
+      background-color: #2b2b2b;
       display: flex;
       justify-content: center;
       align-items: center;
+      height: 100vh;
     }
 
     .login-box {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 40px 30px;
+      background-color: #fff;
+      padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      max-width: 360px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
       width: 100%;
+      max-width: 400px;
       text-align: center;
     }
 
-    h1 {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      margin-bottom: 5px;
-      gap: 10px;
+    .login-box h1 {
+      margin-bottom: 10px;
+      font-size: 24px;
     }
 
-    h3 {
-      font-size: 14px;
-      color: #444;
+    .login-box p {
       margin-bottom: 20px;
+      font-size: 14px;
+      color: #555;
     }
 
-    input {
+    input[type="text"] {
       width: 100%;
       padding: 12px;
       font-size: 16px;
       border: 1px solid #ccc;
       border-radius: 6px;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
+      box-sizing: border-box;
     }
 
     button {
       width: 100%;
       padding: 12px;
       background-color: #007bff;
-      color: white;
       border: none;
-      font-size: 16px;
       border-radius: 6px;
+      color: white;
+      font-size: 16px;
       cursor: pointer;
-      transition: background 0.3s ease;
     }
 
     button:hover {
       background-color: #0056b3;
+    }
+
+    @media (max-width: 500px) {
+      .login-box {
+        padding: 20px;
+        border-radius: 10px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="login-box">
     <h1>🗳️ Decentralized Voting</h1>
-    <h3>Enter your name to continue</h3>
+    <p>Enter your name to continue</p>
     <form onsubmit="goToVoting(event)">
       <input type="text" id="name" placeholder="Your Name" required />
       <button type="submit">Login</button>

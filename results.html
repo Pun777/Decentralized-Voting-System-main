@@ -1,137 +1,182 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ผลคะแนน</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ผลการโหวต</title>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 20px;
-      text-align: center;
+      font-family: "Segoe UI", sans-serif;
+      background-color: #2b2b2b;
+      color: white;
       margin: 0;
+      padding: 0;
     }
 
-    .result-card {
-      display: inline-block;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      margin: 10px;
+    header {
+      text-align: center;
       padding: 20px;
-      width: 250px;
-      background: #f5f5f5;
     }
 
-    .result-card img {
-      width: 100%;
-      height: auto;
-      border-radius: 8px;
+    .nav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
     }
 
-    #logoutBtn, #backToVoteBtn {
-      position: fixed;
+    .nav a {
       padding: 10px 15px;
-      font-size: 14px;
+      background: #6c63ff;
       color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .mode-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .mode-toggle button {
+      padding: 10px 15px;
       border: none;
       border-radius: 6px;
-      cursor: pointer;
-      z-index: 1000;
-    }
-
-    #logoutBtn {
-      top: 20px;
-      right: 20px;
-      background-color: #dc3545;
-    }
-
-    #logoutBtn:hover {
-      background-color: #c82333;
-    }
-
-    #backToVoteBtn {
-      top: 20px;
-      left: 20px;
-      background-color: #28a745;
-    }
-
-    #backToVoteBtn:hover {
-      background-color: #218838;
-    }
-
-    .delete-btn {
-      margin-top: 10px;
-      background-color: #007bff;
+      background: #007bff;
       color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
       cursor: pointer;
     }
 
-    .delete-btn:hover {
-      background-color: #0056b3;
+    .mode-toggle button:hover {
+      background: #0056b3;
     }
 
-    #searchInput, #toggleChartBtn {
-      padding: 10px;
+    .leaderboard, .infographic {
+      display: none;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .candidate-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #3a3a3a;
+      padding: 10px 15px;
+      border-radius: 10px;
+      margin: 8px 0;
+      flex-wrap: wrap;
+      box-shadow: 0 0 5px rgba(0,0,0,0.4);
+    }
+
+    .candidate-row img {
+      width: 50px;
+      height: 50px;
+      border-radius: 6px;
+      object-fit: cover;
+      margin-right: 10px;
+    }
+
+    .candidate-info {
+      flex: 1;
       font-size: 16px;
+    }
+
+    .vote-percent {
+      background: red;
+      padding: 6px 12px;
       border-radius: 6px;
-      border: 1px solid #ccc;
+      font-weight: bold;
+      min-width: 70px;
+      text-align: center;
+    }
+
+    .infographic {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .info-card {
+      background: #3a3a3a;
+      border-radius: 10px;
+      padding: 20px;
+      width: 100%;
+      max-width: 280px;
+      text-align: center;
       margin: 10px;
+      position: relative;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
     }
 
-    #toggleChartBtn {
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
+    .info-card img {
+      width: 100px;
+      height: 100px;
+      border-radius: 6px;
+      object-fit: cover;
+      margin-bottom: 10px;
+      border: 3px solid #007bff;
     }
 
-    #toggleChartBtn:hover {
-      background-color: #0056b3;
+    .info-card h3 {
+      margin: 0;
+      font-size: 18px;
     }
 
-    canvas {
-      margin-top: 30px;
+    .info-card p {
+      margin: 5px 0;
+      font-weight: bold;
+      color: #dc3545;
+    }
+
+    .medal {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      font-size: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .candidate-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .info-card {
+        width: 90%;
+      }
     }
   </style>
 </head>
 <body>
-  <button onclick="goBackToVote()" id="backToVoteBtn">🔙 กลับหน้าโหวต</button>
-  <button onclick="logout()" id="logoutBtn">🚪 ออกจากระบบ</button>
 
-  <h1>📊 ผลการโหวต</h1>
+  <header>
+    <h1>📊 ผลการโหวต</h1>
+  </header>
 
-  <input
-    type="text"
-    id="searchInput"
-    placeholder="🔍 ค้นหาชื่อผู้สมัคร..."
-    oninput="filterResults()"
-  />
+  <div class="nav">
+    <a href="login.html">🔐 กลับหน้าล็อคอิน</a>
+    <a href="index.html">🗳️ กลับหน้าโหวต</a>
+  </div>
 
-  <button onclick="toggleChart()" id="toggleChartBtn">📊 ดูกราฟ</button>
+  <div class="mode-toggle">
+    <button onclick="switchView('leaderboard')">📋 Leaderboard</button>
+    <button onclick="switchView('infographic')">🧾 Infographic</button>
+  </div>
 
-  <div id="results"></div>
-  <canvas id="voteChart" width="800" height="400" style="display:none;"></canvas>
+  <div id="leaderboard" class="leaderboard"></div>
+  <div id="infographic" class="infographic"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const voterName = localStorage.getItem("voterName");
-    const isAdmin = localStorage.getItem("isAdmin") === "true";
-    if (!voterName) window.location.href = "login.html";
-
-    const hiddenCandidates = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
-
     const candidates = [];
+    const votes = JSON.parse(localStorage.getItem("votes") || "{}");
 
-    // ➤ ผู้สมัครคนที่ 1: ซาร่า
-    candidates.push({
-      id: 1,
-      name: "ซาร่า",
-      image: "Mohamed_Salah_2018.jpg"
-    });
-
-    // ➤ ผู้สมัครที่ 2–150
+    candidates.push({ id: 1, name: "ซาร่า", image: "Mohamed_Salah_2018.jpg" });
     for (let i = 2; i <= 150; i++) {
       candidates.push({
         id: i,
@@ -139,8 +184,6 @@
         image: "../assets/eth5.jpg"
       });
     }
-
-    const votes = JSON.parse(localStorage.getItem("votes") || "{}");
 
     let totalVotes = 0;
     candidates.forEach(c => {
@@ -154,163 +197,45 @@
 
     candidates.sort((a, b) => b.voteCount - a.voteCount);
 
-    const container = document.getElementById("results");
+    function buildViews() {
+      const lb = document.getElementById("leaderboard");
+      const ig = document.getElementById("infographic");
 
-    const visibleCandidates = candidates.filter(c => !hiddenCandidates.includes(c.id));
-    const hiddenOnly = isAdmin ? candidates.filter(c => hiddenCandidates.includes(c.id)) : [];
-
-    visibleCandidates.forEach(c => {
-      const div = document.createElement("div");
-      div.className = "result-card";
-      div.innerHTML = `
-        <img src="${c.image}" alt="${c.name}" />
-        <h3>${c.name}</h3>
-        <p>คะแนน: ${c.voteCount} (${c.percent}%)</p>
-        ${isAdmin ? `<button class="delete-btn" onclick="deleteVote(${c.id})">🗑️ ซ่อนจากอันดับ</button>` : ""}
-      `;
-      container.appendChild(div);
-    });
-
-    if (isAdmin && hiddenOnly.length > 0) {
-      const separator = document.createElement("h2");
-      separator.innerText = "🛑 ผู้สมัครที่ถูกซ่อน";
-      container.appendChild(separator);
-
-      hiddenOnly.forEach(c => {
-        const div = document.createElement("div");
-        div.className = "result-card";
-        div.innerHTML = `
-          <img src="${c.image}" alt="${c.name}" />
-          <h3>${c.name}</h3>
-          <p>คะแนน: ${c.voteCount} (${c.percent}%)</p>
-          <p style="color: red;">🔒 ถูกซ่อนจากอันดับ</p>
-          <button class="delete-btn" onclick="unhideCandidate(${c.id})">♻️ แสดงคืน</button>
+      candidates.forEach((c, i) => {
+        // Leaderboard
+        const row = document.createElement("div");
+        row.className = "candidate-row";
+        row.innerHTML = `
+          <strong>#${i + 1}</strong>
+          <img src="${c.image}" alt="">
+          <div class="candidate-info">${c.name}</div>
+          <div class="vote-percent">${c.percent}%</div>
         `;
-        container.appendChild(div);
-      });
+        lb.appendChild(row);
 
-      // ✅ ปุ่มแสดงคืนทั้งหมด
-      const resetBtn = document.createElement("button");
-      resetBtn.id = "resetHiddenBtn";
-      resetBtn.innerText = "♻️ แสดงผู้สมัครทั้งหมด";
-      resetBtn.onclick = resetHiddenCandidates;
-      resetBtn.style = `
-        padding: 10px 20px;
-        font-size: 14px;
-        background-color: #17a2b8;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        margin: 20px auto;
-      `;
-      container.appendChild(resetBtn);
-    }
-
-    function deleteVote(candidateId) {
-      if (!confirm("คุณแน่ใจว่าต้องการซ่อนผู้สมัครคนนี้จากอันดับหรือไม่?")) return;
-
-      const hiddenList = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
-      if (!hiddenList.includes(candidateId)) {
-        hiddenList.push(candidateId);
-        localStorage.setItem("hiddenCandidates", JSON.stringify(hiddenList));
-      }
-
-      alert("ผู้สมัครถูกซ่อนจากอันดับแล้ว");
-      location.reload();
-    }
-
-    function unhideCandidate(candidateId) {
-      const hiddenList = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
-      const updated = hiddenList.filter(id => id !== candidateId);
-      localStorage.setItem("hiddenCandidates", JSON.stringify(updated));
-      alert("แสดงผู้สมัครคืนสำเร็จ");
-      location.reload();
-    }
-
-    function resetHiddenCandidates() {
-      if (!confirm("ต้องการแสดงผู้สมัครทั้งหมดที่ถูกซ่อนใช่หรือไม่?")) return;
-      localStorage.removeItem("hiddenCandidates");
-      alert("แสดงผู้สมัครทั้งหมดแล้ว");
-      location.reload();
-    }
-
-    function logout() {
-      localStorage.removeItem("voterName");
-      localStorage.removeItem("voted");
-      localStorage.removeItem("isAdmin");
-      window.location.href = "login.html";
-    }
-
-    function goBackToVote() {
-      window.location.href = "index.html";
-    }
-
-    function filterResults() {
-      const query = document.getElementById("searchInput").value.toLowerCase();
-      const cards = document.querySelectorAll(".result-card");
-      cards.forEach(card => {
-        const name = card.querySelector("h3").textContent.toLowerCase();
-        card.style.display = name.includes(query) ? "inline-block" : "none";
-      });
-    }
-
-    let chartVisible = false;
-    let voteChart;
-
-    function toggleChart() {
-      const canvas = document.getElementById("voteChart");
-      const cards = document.querySelectorAll(".result-card");
-      chartVisible = !chartVisible;
-
-      if (chartVisible) {
-        canvas.style.display = "block";
-        cards.forEach(card => card.style.display = "none");
-        renderChart();
-        document.getElementById("toggleChartBtn").innerText = "📋 ดูแบบการ์ด";
-      } else {
-        canvas.style.display = "none";
-        cards.forEach(card => card.style.display = "inline-block");
-        document.getElementById("toggleChartBtn").innerText = "📊 ดูกราฟ";
-      }
-    }
-
-    function renderChart() {
-      const canvas = document.getElementById("voteChart");
-      const top10 = candidates
-        .filter(c => !hiddenCandidates.includes(c.id))
-        .slice(0, 10);
-
-      const labels = top10.map(c => c.name);
-      const data = top10.map(c => c.voteCount);
-
-      if (voteChart) voteChart.destroy();
-
-      voteChart = new Chart(canvas, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'จำนวนคะแนน',
-            data: data,
-            backgroundColor: 'rgba(54, 162, 235, 0.8)'
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          },
-          plugins: {
-            legend: {
-              display: false
-            }
-          }
+        // Infographic (Top 10 เท่านั้น)
+        if (i < 10) {
+          const card = document.createElement("div");
+          card.className = "info-card";
+          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+          card.innerHTML = `
+            ${medal ? `<div class="medal">${medal}</div>` : ''}
+            <img src="${c.image}" alt="">
+            <h3>${c.name}</h3>
+            <p>${c.percent}% (${c.voteCount} คะแนน)</p>
+          `;
+          ig.appendChild(card);
         }
       });
     }
+
+    function switchView(view) {
+      document.getElementById("leaderboard").style.display = view === "leaderboard" ? "block" : "none";
+      document.getElementById("infographic").style.display = view === "infographic" ? "flex" : "none";
+    }
+
+    buildViews();
+    switchView("leaderboard");
   </script>
 </body>
 </html>
