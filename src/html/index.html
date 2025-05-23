@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voting Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      background: url("jj.png") no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: rgb(20, 20, 20);
+      margin-top: 40px;
+      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.993);
+    }
+
+    .candidate-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      background-color: rgba(253, 248, 248, 0);
+      padding: 30px;
+      margin: 20px;
+      border-radius: 10px;
+      max-width: 1200px;
+    }
+
+    .candidate-card {
+      width: 250px;
+      border: 1px solid #0f0f0f;
+      border-radius: 10px;
+      padding: 15px;
+      background-color: #fff;
+      box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .candidate-card img {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .vote-btn {
+      margin-top: 10px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+
+    #accountAddress {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #161414;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+    }
+
+    #logoutBtn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 15px;
+      font-size: 14px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    #logoutBtn:hover {
+      background-color: #c82333;
+    }
+
+    #searchInput {
+      padding: 10px;
+      font-size: 16px;
+      width: 300px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin: 15px 0;
+    }
+
+    #result-button-wrapper button {
+      padding: 10px 20px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+
+    #result-button-wrapper button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="logoutBtn" onclick="logout()">🔙 ออกจากระบบ</button>
+
+  <h1>🗳️ ลงคะแนนโหวต</h1>
+  <p id="accountAddress"></p>
+
+  <div id="result-button-wrapper"></div>
+
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="🔍 ค้นหาชื่อผู้สมัคร..."
+    oninput="filterCandidates()"
+  />
+
+  <div id="candidate-list" class="candidate-grid"></div>
+
+  <script>
+    const voterName = localStorage.getItem("voterName");
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
+    const hasVoted = !!localStorage.getItem("voted");
+
+    if (!voterName) window.location.href = "login.html";
+
+    document.getElementById("accountAddress").innerText =
+      isAdmin
+        ? "ยินดีต้อนรับ: admin (Admin - ไม่สามารถโหวตได้)"
+        : "ยินดีต้อนรับ: " + voterName;
+
+    // 🔘 ปุ่มดูผลคะแนน
+    const resultBtnWrapper = document.getElementById("result-button-wrapper");
+    const resultBtn = document.createElement("button");
+    resultBtn.textContent = "📊 ดูผลคะแนน";
+    resultBtn.onclick = () => window.location.href = "results.html";
+    resultBtnWrapper.appendChild(resultBtn);
+
+    // 👤 รายชื่อผู้สมัคร
+    const candidates = [];
+
+    // ➤ ซาร่า เป็นผู้สมัครคนที่ 1
+    candidates.push({
+      id: 1,
+      name: "ซาร่า",
+      info: "นักฟุตบอลอาชีพ",
+      image: "Mohamed_Salah_2018.jpg"
+    });
+
+    // ➤ ผู้สมัครที่ 2 ถึง 150
+    for (let i = 2; i <= 150; i++) {
+      candidates.push({
+        id: i,
+        name: `ผู้สมัคร ${i}`,
+        info: `นโยบายของผู้สมัครหมายเลข ${i}`,
+        image: "../assets/eth5.jpg"
+      });
+    }
+
+    const container = document.getElementById("candidate-list");
+    candidates.forEach(candidate => {
+      const card = document.createElement("div");
+      card.className = "candidate-card";
+      card.innerHTML = `
+        <img src="${candidate.image}" />
+        <h3>${candidate.name}</h3>
+        <p>${candidate.info}</p>
+        ${
+          isAdmin
+            ? `<p style="color:red;"><em>Admin ไม่สามารถโหวตได้</em></p>`
+            : hasVoted
+              ? `<button class="vote-btn" disabled>คุณได้โหวตแล้ว</button>`
+              : `<button class="vote-btn" onclick="vote(${candidate.id})">โหวต</button>`
+        }
+      `;
+      container.appendChild(card);
+    });
+
+    function vote(candidateId) {
+      if (isAdmin || hasVoted) return;
+
+      const votes = JSON.parse(localStorage.getItem("votes") || "{}");
+      votes[candidateId] = (votes[candidateId] || 0) + 1;
+      localStorage.setItem("votes", JSON.stringify(votes));
+      localStorage.setItem("voted", candidateId);
+
+      const voterList = JSON.parse(localStorage.getItem("voterList") || "[]");
+      if (!voterList.includes(voterName)) {
+        voterList.push(voterName);
+        localStorage.setItem("voterList", JSON.stringify(voterList));
+      }
+
+      alert("โหวตสำเร็จ!");
+      window.location.href = "results.html";
+    }
+
+    function logout() {
+      localStorage.removeItem("voterName");
+      localStorage.removeItem("voted");
+      localStorage.removeItem("isAdmin");
+      window.location.href = "login.html";
+    }
+
+    function filterCandidates() {
+      const query = document.getElementById("searchInput").value.toLowerCase();
+      const cards = document.querySelectorAll(".candidate-card");
+      cards.forEach(card => {
+        const name = card.querySelector("h3").textContent.toLowerCase();
+        card.style.display = name.includes(query) ? "block" : "none";
+      });
+    }
+  </script>
+</body>
+</html>
