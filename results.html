@@ -36,8 +36,15 @@
     .back-btn { background: #007bff; color: white; }
     .logout-btn { background: #dc3545; color: white; }
 
+    .section-title {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
     .results {
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
       padding: 20px;
     }
@@ -72,6 +79,11 @@
       font-weight: bold;
     }
 
+    .medal {
+      font-size: 24px;
+      margin-right: 10px;
+    }
+
     @media (max-width: 600px) {
       .result-card {
         flex-direction: column;
@@ -99,13 +111,16 @@
   </header>
 
   <div class="actions">
-    <button class="back-btn" onclick="location.href='index.html'">⬅️ กลับไปหน้าโหวต</button>
+    <button class="back-btn" onclick="location.href='index.html'">⬅️ กลับหน้าโหวต</button>
     <button class="logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
   </div>
 
-  <div class="results" id="resultsList"></div>
+  <div class="section-title">🏆 Top 10 อันดับสูงสุด</div>
+  <div class="results" id="top10List"></div>
 
-  <!-- Firebase SDK + Logic -->
+  <div class="section-title">📋 ผู้สมัครทั้งหมด</div>
+  <div class="results" id="allList"></div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
@@ -140,37 +155,60 @@
       candidates.push({
         id: i,
         name: `ผู้สมัคร ${i}`,
-        image: `https://via.placeholder.com/300x200?text=Candidate+${i}`
+        image: `https://placehold.co/300x200?text=Candidate+${i}`
       });
     }
 
-    const resultsRef = collection(db, "votes");
-    const container = document.getElementById("resultsList");
+    const votesRef = collection(db, "votes");
+    const top10Div = document.getElementById("top10List");
+    const allListDiv = document.getElementById("allList");
 
-    onSnapshot(resultsRef, (snapshot) => {
-      const results = {};
+    onSnapshot(votesRef, (snapshot) => {
+      const voteMap = {};
       snapshot.forEach(doc => {
-        results[doc.id] = doc.data().count;
+        voteMap[parseInt(doc.id)] = doc.data().count;
       });
 
-      const totalVotes = Object.values(results).reduce((a, b) => a + b, 0);
-      const sorted = Object.entries(results).sort(([, a], [, b]) => b - a);
+      // merge with candidates
+      const merged = candidates.map(c => ({
+        ...c,
+        votes: voteMap[c.id] || 0
+      }));
 
-      container.innerHTML = "";
-      sorted.forEach(([idStr, count], index) => {
-        const id = parseInt(idStr);
-        const candidate = candidates.find(c => c.id === id);
-        if (!candidate) return;
-        const percent = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(2) : "0.00";
+      const total = merged.reduce((sum, c) => sum + c.votes, 0);
+
+      const sorted = [...merged].sort((a, b) => b.votes - a.votes);
+
+      // Top 10
+      top10Div.innerHTML = "";
+      sorted.slice(0, 10).forEach((c, index) => {
+        const percent = total ? ((c.votes / total) * 100).toFixed(2) : "0.00";
+        const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "";
 
         const row = document.createElement("div");
         row.className = "result-card";
         row.innerHTML = `
-          <img src="${candidate.image}" />
-          <div class="name">#${index + 1} ${candidate.name}</div>
+          <span class="medal">${medal}</span>
+          <img src="${c.image}" />
+          <div class="name">#${index + 1} ${c.name}</div>
           <div class="percent">${percent}%</div>
         `;
-        container.appendChild(row);
+        top10Div.appendChild(row);
+      });
+
+      // All candidates
+      allListDiv.innerHTML = "";
+      sorted.forEach((c, index) => {
+        const percent = total ? ((c.votes / total) * 100).toFixed(2) : "0.00";
+
+        const row = document.createElement("div");
+        row.className = "result-card";
+        row.innerHTML = `
+          <img src="${c.image}" />
+          <div class="name">#${index + 1} ${c.name}</div>
+          <div class="percent">${percent}%</div>
+        `;
+        allListDiv.appendChild(row);
       });
     });
 
