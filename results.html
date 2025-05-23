@@ -172,70 +172,105 @@
   <div id="leaderboard" class="leaderboard"></div>
   <div id="infographic" class="infographic"></div>
 
-  <script>
-    const candidates = [];
-    const votes = JSON.parse(localStorage.getItem("votes") || "{}");
+ <script>
+  const voterName = localStorage.getItem("voterName");
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
+  const votes = JSON.parse(localStorage.getItem("votes") || "{}");
+  const hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
 
-    candidates.push({ id: 1, name: "ซาร่า", image: "Mohamed_Salah_2018.jpg" });
-    for (let i = 2; i <= 150; i++) {
-      candidates.push({
-        id: i,
-        name: `ผู้สมัคร ${i}`,
-        image: "../assets/eth5.jpg"
-      });
-    }
+  const candidates = [];
+  candidates.push({ id: 1, name: "ซาร่า", image: "Mohamed_Salah_2018.jpg" });
+  for (let i = 2; i <= 150; i++) {
+    candidates.push({ id: i, name: `ผู้สมัคร ${i}`, image: "../assets/eth5.jpg" });
+  }
 
-    let totalVotes = 0;
-    candidates.forEach(c => {
-      c.voteCount = votes[c.id] || 0;
-      totalVotes += c.voteCount;
-    });
+  let totalVotes = 0;
+  candidates.forEach(c => {
+    c.voteCount = votes[c.id] || 0;
+    totalVotes += c.voteCount;
+  });
 
-    candidates.forEach(c => {
-      c.percent = totalVotes > 0 ? ((c.voteCount / totalVotes) * 100).toFixed(2) : "0.00";
-    });
+  candidates.forEach(c => {
+    c.percent = totalVotes > 0 ? ((c.voteCount / totalVotes) * 100).toFixed(2) : "0.00";
+  });
 
-    candidates.sort((a, b) => b.voteCount - a.voteCount);
+  candidates.sort((a, b) => b.voteCount - a.voteCount);
 
-    function buildViews() {
-      const lb = document.getElementById("leaderboard");
-      const ig = document.getElementById("infographic");
+  function buildViews() {
+    const lb = document.getElementById("leaderboard");
+    const ig = document.getElementById("infographic");
 
-      candidates.forEach((c, i) => {
-        // Leaderboard
-        const row = document.createElement("div");
-        row.className = "candidate-row";
-        row.innerHTML = `
-          <strong>#${i + 1}</strong>
-          <img src="${c.image}" alt="">
-          <div class="candidate-info">${c.name}</div>
-          <div class="vote-percent">${c.percent}%</div>
-        `;
-        lb.appendChild(row);
+    lb.innerHTML = '';
+    ig.innerHTML = '';
 
-        // Infographic (Top 10 เท่านั้น)
-        if (i < 10) {
-          const card = document.createElement("div");
-          card.className = "info-card";
-          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
-          card.innerHTML = `
-            ${medal ? `<div class="medal">${medal}</div>` : ''}
-            <img src="${c.image}" alt="">
-            <h3>${c.name}</h3>
-            <p>${c.percent}% (${c.voteCount} คะแนน)</p>
-          `;
-          ig.appendChild(card);
+    candidates.forEach((c, i) => {
+      const isHidden = hidden.includes(c.id);
+
+      // Leaderboard
+      const row = document.createElement("div");
+      row.className = "candidate-row";
+      row.innerHTML = `
+        <strong>#${i + 1}</strong>
+        <img src="${c.image}" alt="">
+        <div class="candidate-info">${c.name}</div>
+        <div class="vote-percent">${c.percent}%</div>
+        ${
+          isAdmin
+            ? (!isHidden
+              ? `<button onclick="hideCandidate(${c.id})">🗑️ ซ่อน</button>`
+              : `<button onclick="unhideCandidate(${c.id})">♻️ คืน</button>`)
+            : ""
         }
-      });
-    }
+      `;
+      if (!isHidden || isAdmin) lb.appendChild(row);
 
-    function switchView(view) {
-      document.getElementById("leaderboard").style.display = view === "leaderboard" ? "block" : "none";
-      document.getElementById("infographic").style.display = view === "infographic" ? "flex" : "none";
-    }
+      // Infographic (Top 10 ไม่ถูกซ่อน)
+      if (i < 10 && !isHidden) {
+        const card = document.createElement("div");
+        card.className = "info-card";
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+        card.innerHTML = `
+          ${medal ? `<div class="medal">${medal}</div>` : ''}
+          <img src="${c.image}" alt="">
+          <h3>${c.name}</h3>
+          <p>${c.percent}% (${c.voteCount} คะแนน)</p>
+        `;
+        ig.appendChild(card);
+      }
+    });
 
+    // ปุ่มคืนค่าทั้งหมด
+    if (isAdmin && hidden.length > 0) {
+      const btn = document.createElement("button");
+      btn.textContent = "♻️ แสดงผู้สมัครทั้งหมด";
+      btn.onclick = () => {
+        localStorage.removeItem("hiddenCandidates");
+        buildViews();
+      };
+      btn.style = "margin-top: 20px; padding: 10px 15px; background:#28a745; color:white; border:none; border-radius:6px; cursor:pointer;";
+      lb.appendChild(btn);
+    }
+  }
+
+  function hideCandidate(id) {
+    const h = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
+    if (!h.includes(id)) h.push(id);
+    localStorage.setItem("hiddenCandidates", JSON.stringify(h));
     buildViews();
-    switchView("leaderboard");
-  </script>
-</body>
-</html>
+  }
+
+  function unhideCandidate(id) {
+    let h = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
+    h = h.filter(x => x !== id);
+    localStorage.setItem("hiddenCandidates", JSON.stringify(h));
+    buildViews();
+  }
+
+  function switchView(view) {
+    document.getElementById("leaderboard").style.display = view === "leaderboard" ? "block" : "none";
+    document.getElementById("infographic").style.display = view === "infographic" ? "flex" : "none";
+  }
+
+  buildViews();
+  switchView("leaderboard");
+</script>
