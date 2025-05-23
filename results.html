@@ -12,12 +12,36 @@
       margin: 0;
       padding: 0;
     }
-    header { text-align: center; padding: 20px; }
+
+    header {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .actions button {
+      padding: 10px 15px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .back-btn { background: #007bff; color: white; }
+    .logout-btn { background: #dc3545; color: white; }
+
     .results {
       max-width: 800px;
       margin: auto;
       padding: 20px;
     }
+
     .result-card {
       background: #333;
       border-radius: 10px;
@@ -27,15 +51,19 @@
       padding: 10px 15px;
       margin-bottom: 10px;
     }
+
     .result-card img {
       width: 60px;
       height: 60px;
       border-radius: 50%;
       object-fit: cover;
     }
+
     .name {
       flex: 1;
+      font-size: 16px;
     }
+
     .percent {
       background: red;
       color: white;
@@ -43,16 +71,41 @@
       border-radius: 6px;
       font-weight: bold;
     }
+
+    @media (max-width: 600px) {
+      .result-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .result-card img {
+        margin-bottom: 10px;
+      }
+
+      .name {
+        width: 100%;
+      }
+
+      .percent {
+        align-self: flex-end;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>📊 ผลการโหวต (เรียลไทม์)</h1>
+    <p id="welcomeText"></p>
   </header>
+
+  <div class="actions">
+    <button class="back-btn" onclick="location.href='index.html'">⬅️ กลับไปหน้าโหวต</button>
+    <button class="logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
+  </div>
 
   <div class="results" id="resultsList"></div>
 
-  <!-- ✅ Firebase SDK + Real-time Vote Display -->
+  <!-- Firebase SDK + Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
@@ -74,7 +127,13 @@
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
-    // Mock candidates data (ID ต้องตรงกับใน index.html)
+    const voterName = localStorage.getItem("voterName");
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
+    if (!voterName) window.location.href = "login.html";
+
+    document.getElementById("welcomeText").innerText =
+      `ยินดีต้อนรับ: ${voterName}${isAdmin ? " (Admin)" : ""}`;
+
     const candidates = [];
     candidates.push({ id: 1, name: "ซาร่า", image: "Mohamed_Salah_2018.jpg" });
     for (let i = 2; i <= 150; i++) {
@@ -114,7 +173,13 @@
         container.appendChild(row);
       });
     });
+
+    window.logout = function () {
+      localStorage.removeItem("voterName");
+      localStorage.removeItem("voted");
+      localStorage.removeItem("isAdmin");
+      window.location.href = "login.html";
+    };
   </script>
 </body>
 </html>
-

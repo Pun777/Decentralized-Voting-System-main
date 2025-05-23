@@ -12,21 +12,59 @@
       margin: 0;
       padding: 0;
     }
-    header { text-align: center; padding: 20px; }
+
+    header {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .actions button {
+      padding: 10px 15px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .results-btn { background: #007bff; color: white; }
+    .logout-btn { background: #dc3545; color: white; }
+
+    .search-box {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .search-box input {
+      padding: 10px;
+      font-size: 16px;
+      width: 300px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
-      padding: 20px;
       max-width: 1200px;
       margin: auto;
+      padding: 20px;
     }
+
     .card {
       background: #3a3a3a;
       border-radius: 10px;
       padding: 15px;
       text-align: center;
     }
+
     .card img {
       width: 100%;
       max-height: 200px;
@@ -34,8 +72,10 @@
       border-radius: 6px;
       margin-bottom: 10px;
     }
+
     .card h3 { margin: 0; font-size: 18px; }
     .card p { font-size: 14px; margin: 8px 0; }
+
     .card button {
       padding: 8px 16px;
       background: white;
@@ -45,6 +85,7 @@
       font-weight: bold;
       cursor: pointer;
     }
+
     .card button:disabled {
       background: gray;
       cursor: not-allowed;
@@ -54,12 +95,21 @@
 <body>
   <header>
     <h1>🗳️ ลงคะแนนโหวต</h1>
-    <p id="welcomeText">ยินดีต้อนรับผู้มีสิทธิ์ลงคะแนน</p>
+    <p id="welcomeText"></p>
   </header>
+
+  <div class="actions">
+    <button class="results-btn" onclick="location.href='results.html'">📊 ดูผลคะแนน</button>
+    <button class="logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
+  </div>
+
+  <div class="search-box">
+    <input type="text" placeholder="🔍 ค้นหาชื่อผู้สมัคร..." oninput="filterCards()" id="searchInput" />
+  </div>
 
   <div class="grid" id="candidateGrid"></div>
 
-  <!-- ✅ Firebase SDK + Voting Logic -->
+  <!-- ✅ Firebase + Voting Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
@@ -81,6 +131,17 @@
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
+    // ------------------------------
+    const voterName = localStorage.getItem("voterName");
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
+    const voted = localStorage.getItem("voted");
+    const hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
+
+    if (!voterName) window.location.href = "login.html";
+
+    document.getElementById("welcomeText").innerText =
+      `ยินดีต้อนรับ: ${voterName}${isAdmin ? " (Admin - ไม่สามารถโหวตได้)" : ""}`;
+
     const candidates = [];
     candidates.push({ id: 1, name: "ซาร่า", info: "นักฟุตบอลอาชีพ", image: "Mohamed_Salah_2018.jpg" });
     for (let i = 2; i <= 150; i++) {
@@ -93,22 +154,34 @@
     }
 
     const grid = document.getElementById("candidateGrid");
-    const voted = localStorage.getItem("voted");
 
     candidates.forEach(c => {
+      const isHidden = hidden.includes(c.id);
       const div = document.createElement("div");
       div.className = "card";
+
       div.innerHTML = `
         <img src="${c.image}" alt="${c.name}" />
         <h3>${c.name}</h3>
         <p>${c.info}</p>
-        <button ${voted ? "disabled" : ""} onclick="vote(${c.id})">${voted ? "โหวตแล้ว" : "โหวต"}</button>
+        ${
+          isAdmin
+            ? (isHidden
+              ? `<button onclick="unhideCandidate(${c.id})">♻️ คืนค่า</button>`
+              : `<button onclick="hideCandidate(${c.id})">🗑️ ซ่อน</button>`)
+            : voted
+              ? `<button disabled>โหวตแล้ว</button>`
+              : `<button onclick="vote(${c.id})">โหวต</button>`
+        }
       `;
-      grid.appendChild(div);
+
+      if (!isHidden || isAdmin) {
+        grid.appendChild(div);
+      }
     });
 
     window.vote = async function(candidateId) {
-      if (localStorage.getItem("voted")) return;
+      if (isAdmin || voted) return;
 
       const candidateRef = doc(db, "votes", candidateId.toString());
       try {
@@ -120,6 +193,36 @@
       localStorage.setItem("voted", candidateId);
       alert("โหวตสำเร็จ!");
       location.reload();
+    };
+
+    window.logout = function () {
+      localStorage.removeItem("voterName");
+      localStorage.removeItem("voted");
+      localStorage.removeItem("isAdmin");
+      window.location.href = "login.html";
+    };
+
+    window.hideCandidate = function(id) {
+      const hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
+      if (!hidden.includes(id)) hidden.push(id);
+      localStorage.setItem("hiddenCandidates", JSON.stringify(hidden));
+      location.reload();
+    };
+
+    window.unhideCandidate = function(id) {
+      let hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
+      hidden = hidden.filter(cid => cid !== id);
+      localStorage.setItem("hiddenCandidates", JSON.stringify(hidden));
+      location.reload();
+    };
+
+    window.filterCards = function () {
+      const query = document.getElementById("searchInput").value.toLowerCase();
+      const cards = document.querySelectorAll(".card");
+      cards.forEach(card => {
+        const name = card.querySelector("h3").textContent.toLowerCase();
+        card.style.display = name.includes(query) ? "block" : "none";
+      });
     };
   </script>
 </body>
