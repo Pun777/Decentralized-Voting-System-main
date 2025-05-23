@@ -124,14 +124,14 @@
 
     const candidates = [];
 
-    // ➤ คนที่ 1: ซาร่า
+    // ➤ ผู้สมัครคนที่ 1: ซาร่า
     candidates.push({
       id: 1,
       name: "ซาร่า",
       image: "Mohamed_Salah_2018.jpg"
     });
 
-    // ➤ คนที่ 2–150
+    // ➤ ผู้สมัครที่ 2–150
     for (let i = 2; i <= 150; i++) {
       candidates.push({
         id: i,
@@ -142,7 +142,6 @@
 
     const votes = JSON.parse(localStorage.getItem("votes") || "{}");
 
-    // คำนวณคะแนนรวม
     let totalVotes = 0;
     candidates.forEach(c => {
       c.voteCount = votes[c.id] || 0;
@@ -158,9 +157,7 @@
     const container = document.getElementById("results");
 
     const visibleCandidates = candidates.filter(c => !hiddenCandidates.includes(c.id));
-    const hiddenOnly = isAdmin
-      ? candidates.filter(c => hiddenCandidates.includes(c.id))
-      : [];
+    const hiddenOnly = isAdmin ? candidates.filter(c => hiddenCandidates.includes(c.id)) : [];
 
     visibleCandidates.forEach(c => {
       const div = document.createElement("div");
@@ -191,6 +188,23 @@
         `;
         container.appendChild(div);
       });
+
+      // ✅ ปุ่มแสดงคืนทั้งหมด
+      const resetBtn = document.createElement("button");
+      resetBtn.id = "resetHiddenBtn";
+      resetBtn.innerText = "♻️ แสดงผู้สมัครทั้งหมด";
+      resetBtn.onclick = resetHiddenCandidates;
+      resetBtn.style = `
+        padding: 10px 20px;
+        font-size: 14px;
+        background-color: #17a2b8;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        margin: 20px auto;
+      `;
+      container.appendChild(resetBtn);
     }
 
     function deleteVote(candidateId) {
@@ -211,6 +225,13 @@
       const updated = hiddenList.filter(id => id !== candidateId);
       localStorage.setItem("hiddenCandidates", JSON.stringify(updated));
       alert("แสดงผู้สมัครคืนสำเร็จ");
+      location.reload();
+    }
+
+    function resetHiddenCandidates() {
+      if (!confirm("ต้องการแสดงผู้สมัครทั้งหมดที่ถูกซ่อนใช่หรือไม่?")) return;
+      localStorage.removeItem("hiddenCandidates");
+      alert("แสดงผู้สมัครทั้งหมดแล้ว");
       location.reload();
     }
 
