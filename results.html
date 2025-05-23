@@ -8,7 +8,7 @@
     body {
       font-family: "Segoe UI", sans-serif;
       background-color: #1e1e1e;
-      color: white;
+      color: rgb(243, 234, 234);
       margin: 0;
       padding: 0;
     }
@@ -73,7 +73,7 @@
 
     .percent {
       background: red;
-      color: white;
+      color: rgb(255, 253, 253);
       padding: 6px 10px;
       border-radius: 6px;
       font-weight: bold;
@@ -150,11 +150,12 @@
 
     document.getElementById("welcomeText").innerText =
       `ยินดีต้อนรับ: ${voterName}${isAdmin ? " (Admin)" : ""}`;
-
+//เพิ่มชื่อ
     const candidates = [];
     candidates.push({ id: 1, name: "ซาร่า", image: "Mohamed_Salah_2018.jpg" });
     candidates.push({ id: 2, name: "ซอน", image: "f.jpg" });
-    for (let i = 3; i <= 150; i++) {
+      candidates.push({ id: 3, name: "โอนาน่า", image: "m.jpg" });
+    for (let i = 4; i <= 150; i++) {
       candidates.push({
         id: i,
         name: `ผู้สมัคร ${i}`,
