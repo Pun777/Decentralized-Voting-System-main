@@ -123,7 +123,6 @@
   </style>
 </head>
 
-
 <body>
   <header>
     <h1>🗳️ ลงคะแนนโหวต</h1>
@@ -149,7 +148,7 @@
       apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
       authDomain: "votingproject-44e22.firebaseapp.com",
       projectId: "votingproject-44e22",
-      storageBucket: "votingproject-44e22.firebasestorage.app",
+      storageBucket: "votingproject-44e22.appspot.com",
       messagingSenderId: "448413445889",
       appId: "1:448413445889:web:0d22e92eed2a09d94ff500",
       measurementId: "G-G6PT9V31VW"
@@ -157,21 +156,10 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    async function fetchHiddenCandidates() {
-      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2"); // ใช้ doc id ตามในภาพ
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        return docSnap.data().hiddenCandidates || [];
-      } else {
-        return [];
-      }
-    }
-
 
     const voterName = localStorage.getItem("voterName");
     const isAdmin = localStorage.getItem("isAdmin") === "true";
     const voted = localStorage.getItem("voted");
-    const hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
 
     if (!voterName) window.location.href = "login.html";
 
@@ -183,10 +171,11 @@
       if (btn) btn.style.display = "none";
     }
 
-    const candidates = [];
-    candidates.push({ id: 1, name: "ซาร่า", info: "นักฟุตบอลอาชีพ", image: "Mohamed_Salah_2018.jpg" });
-    candidates.push({ id: 2, name: "ซอน", info: "นักฟุตบอลอาชีพ", image: "f.jpg" });
-    candidates.push({ id: 3, name: "โอนาน่า", info: "นักฟุตบอลอาชีพ", image: "m.jpg" });
+    const candidates = [
+      { id: 1, name: "ซาร่า", info: "นักฟุตบอลอาชีพ", image: "Mohamed_Salah_2018.jpg" },
+      { id: 2, name: "ซอน", info: "นักฟุตบอลอาชีพ", image: "f.jpg" },
+      { id: 3, name: "โอนาน่า", info: "นักฟุตบอลอาชีพ", image: "m.jpg" },
+    ];
     for (let i = 4; i <= 150; i++) {
       candidates.push({
         id: i,
@@ -196,33 +185,31 @@
       });
     }
 
-    (async () => {
-      const hidden = isAdmin ? await fetchHiddenCandidates() : [];
-      const grid = document.getElementById("candidateGrid");
+    async function fetchHiddenCandidates() {
+      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
+      const docSnap = await getDoc(docRef);
+      return docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
+    }
 
-      candidates.forEach(c => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = `
-      <img src="${c.image}" alt="${c.name}" />
-      <h3>${c.name}</h3>
-      <p>${c.info}</p>
-      ${isAdmin
-            ? (hidden.includes(c.id)
-              ? `<button onclick="unhideCandidate(${c.id})">♻️ คืนค่า</button>`
-              : `<button onclick="hideCandidate(${c.id})">🗑️ ซ่อน</button>`)
-            : voted
-              ? `<button disabled>โหวตแล้ว</button>`
-              : `<button onclick="vote(${c.id})">โหวต</button>`
-          }
-    `;
-        if (!hidden.includes(c.id) || isAdmin) {
-          grid.appendChild(div);
-        }
-      });
-    })();
+    window.hideCandidate = async function (id) {
+      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
+      const docSnap = await getDoc(docRef);
+      const current = docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
+      if (!current.includes(id)) {
+        current.push(id);
+        await updateDoc(docRef, { hiddenCandidates: current });
+      }
+      location.reload();
+    };
 
-
+    window.unhideCandidate = async function (id) {
+      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
+      const docSnap = await getDoc(docRef);
+      let current = docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
+      current = current.filter(cid => cid !== id);
+      await updateDoc(docRef, { hiddenCandidates: current });
+      location.reload();
+    };
 
     window.vote = async function (candidateId) {
       if (isAdmin || voted) return;
@@ -253,27 +240,6 @@
       window.location.href = "login.html";
     };
 
-    window.hideCandidate = async function (id) {
-      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
-      const docSnap = await getDoc(docRef);
-      const current = docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
-      if (!current.includes(id)) {
-        current.push(id);
-        await updateDoc(docRef, { hiddenCandidates: current });
-      }
-      location.reload();
-    };
-
-    window.unhideCandidate = async function (id) {
-      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
-      const docSnap = await getDoc(docRef);
-      let current = docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
-      current = current.filter(cid => cid !== id);
-      await updateDoc(docRef, { hiddenCandidates: current });
-      location.reload();
-    };
-
-
     window.filterCards = function () {
       const query = document.getElementById("searchInput").value.toLowerCase();
       const cards = document.querySelectorAll(".card");
@@ -282,6 +248,32 @@
         card.style.display = name.includes(query) ? "block" : "none";
       });
     };
+
+    (async () => {
+      const hidden = isAdmin ? await fetchHiddenCandidates() : [];
+      const grid = document.getElementById("candidateGrid");
+
+      candidates.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <img src="${c.image}" alt="${c.name}" />
+          <h3>${c.name}</h3>
+          <p>${c.info}</p>
+          ${isAdmin
+            ? (hidden.includes(c.id)
+              ? `<button onclick="unhideCandidate(${c.id})">♻️ คืนค่า</button>`
+              : `<button onclick="hideCandidate(${c.id})">🗑️ ซ่อน</button>`)
+            : voted
+              ? `<button disabled>โหวตแล้ว</button>`
+              : `<button onclick="vote(${c.id})">โหวต</button>`
+          }
+        `;
+        if (!hidden.includes(c.id) || isAdmin) {
+          grid.appendChild(div);
+        }
+      });
+    })();
   </script>
 </body>
 
