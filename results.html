@@ -117,13 +117,19 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-    import { doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import {
+      getFirestore,
+      collection,
+      onSnapshot,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
       authDomain: "votingproject-44e22.firebaseapp.com",
       projectId: "votingproject-44e22",
-      storageBucket: "votingproject-44e22.firebasestorage.app",
+      storageBucket: "votingproject-44e22.appspot.com",
       messagingSenderId: "448413445889",
       appId: "1:448413445889:web:0d22e92eed2a09d94ff500",
       measurementId: "G-G6PT9V31VW"
@@ -134,13 +140,31 @@
 
     const voterName = localStorage.getItem("voterName");
     if (!voterName) window.location.href = "login.html";
+
     document.getElementById("welcomeText").innerText = `ยินดีต้อนรับ: ${voterName}`;
-    const settingsRef = doc(db, "settings", "general");
+    const resultsDiv = document.getElementById("resultsList");
+
+    const candidates = [
+      { id: "1", name: "ซาร่า", image: "Mohamed_Salah_2018.jpg" },
+      { id: "2", name: "ซอน", image: "f.jpg" },
+      { id: "3", name: "โอนาน่า", image: "m.jpg" },
+    ];
+    for (let i = 4; i <= 150; i++) {
+      candidates.push({
+        id: i.toString(),
+        name: `ผู้สมัคร ${i}`,
+        image: `https://placehold.co/60x60?text=${i}`
+      });
+    }
+
+    const resultsRef = collection(db, "votes");
+    const settingsRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
+
     let hidden = [];
 
     onSnapshot(settingsRef, (docSnap) => {
       hidden = docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
-      renderResults(); // โหลดผลคะแนนเมื่อ hidden มาแล้ว
+      renderResults();
     });
 
     function renderResults() {
@@ -151,7 +175,7 @@
         const merged = candidates.map(c => ({
           ...c,
           votes: votes[c.id] || 0
-        })).filter(c => !hidden.includes(c.id));
+        })).filter(c => !hidden.includes(Number(c.id)));
 
         const total = merged.reduce((sum, c) => sum + c.votes, 0);
         const sorted = [...merged].sort((a, b) => b.votes - a.votes);
@@ -164,16 +188,15 @@
           const row = document.createElement("div");
           row.className = "result-card";
           row.innerHTML = `
-        ${medal ? `<span class='medal'>${medal}</span>` : ""}
-        <img src="${c.image}" />
-        <div class="name">#${i + 1} ${c.name}</div>
-        <div class="percent">${percent}%</div>
-      `;
+            ${medal ? `<span class='medal'>${medal}</span>` : ""}
+            <img src="${c.image}" />
+            <div class="name">#${i + 1} ${c.name}</div>
+            <div class="percent">${percent}%</div>
+          `;
           resultsDiv.appendChild(row);
         });
       });
     }
-
 
     window.logout = function () {
       localStorage.clear();
