@@ -1,6 +1,6 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="th">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,12 +13,10 @@
       margin: 0;
       padding: 0;
     }
-
     header {
       text-align: center;
       padding: 20px;
     }
-
     .actions {
       display: flex;
       gap: 10px;
@@ -32,7 +30,6 @@
       flex-direction: column;
       align-items: flex-end;
     }
-
     .actions button,
     .actions input {
       padding: 10px 15px;
@@ -42,28 +39,15 @@
       margin-top: 5px;
       cursor: pointer;
     }
-
     .actions input {
       width: 200px;
       background-color: #fff;
       color: #000;
       border: 1px solid #ccc;
     }
-
-    .results-btn {
-      background: #007bff;
-      color: white;
-    }
-
-    .logout-btn {
-      background: #dc3545;
-      color: white;
-    }
-
-    .admin-btn {
-      background: #28a745;
-      color: white;
-    }
+    .results-btn { background: #007bff; color: white; }
+    .logout-btn { background: #dc3545; color: white; }
+    .admin-btn { background: #28a745; color: white; }
 
     .grid {
       display: grid;
@@ -73,14 +57,12 @@
       margin: auto;
       padding: 100px 20px 20px;
     }
-
     .card {
       background: #3a3a3a;
       border-radius: 10px;
       padding: 15px;
       text-align: center;
     }
-
     .card img {
       width: 100%;
       max-height: 200px;
@@ -88,17 +70,8 @@
       border-radius: 6px;
       margin-bottom: 10px;
     }
-
-    .card h3 {
-      margin: 0;
-      font-size: 18px;
-    }
-
-    .card p {
-      font-size: 14px;
-      margin: 8px 0;
-    }
-
+    .card h3 { margin: 0; font-size: 18px; }
+    .card p { font-size: 14px; margin: 8px 0; }
     .card button {
       padding: 8px 16px;
       background: white;
@@ -108,12 +81,10 @@
       font-weight: bold;
       cursor: pointer;
     }
-
     .card button:disabled {
       background: gray;
       cursor: not-allowed;
     }
-
     @media (max-width: 600px) {
       .actions {
         right: 10px;
@@ -122,20 +93,17 @@
     }
   </style>
 </head>
-
 <body>
   <header>
     <h1>🗳️ ลงคะแนนโหวต</h1>
     <p id="welcomeText"></p>
   </header>
-
   <div class="actions">
     <button class="results-btn" onclick="location.href='results.html'">📊 ดูผลคะแนน</button>
     <button class="logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
     <button class="admin-btn" onclick="location.href='admin.html'" id="adminBtn">👑 ผู้ดูแลระบบ</button>
     <input type="text" placeholder="🔍 ค้นหาชื่อผู้สมัคร..." oninput="filterCards()" id="searchInput" />
   </div>
-
   <div class="grid" id="candidateGrid"></div>
 
   <script type="module">
@@ -150,8 +118,7 @@
       projectId: "votingproject-44e22",
       storageBucket: "votingproject-44e22.appspot.com",
       messagingSenderId: "448413445889",
-      appId: "1:448413445889:web:0d22e92eed2a09d94ff500",
-      measurementId: "G-G6PT9V31VW"
+      appId: "1:448413445889:web:0d22e92eed2a09d94ff500"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -162,52 +129,49 @@
     const voted = localStorage.getItem("voted");
 
     if (!voterName) window.location.href = "login.html";
-
-    document.getElementById("welcomeText").innerText =
-      `ยินดีต้อนรับ: ${voterName}${isAdmin ? " (Admin - ไม่สามารถโหวตได้)" : ""}`;
-
-    if (!isAdmin) {
-      const btn = document.getElementById("adminBtn");
-      if (btn) btn.style.display = "none";
-    }
+    document.getElementById("welcomeText").innerText = `ยินดีต้อนรับ: ${voterName}${isAdmin ? " (Admin - ไม่สามารถโหวตได้)" : ""}`;
+    if (!isAdmin) document.getElementById("adminBtn").style.display = "none";
 
     const candidates = [
-      { id: 1, name: "ซาร่า", info: "นักฟุตบอลอาชีพ", image: "Mohamed_Salah_2018.jpg" },
-      { id: 2, name: "ซอน", info: "นักฟุตบอลอาชีพ", image: "f.jpg" },
-      { id: 3, name: "โอนาน่า", info: "นักฟุตบอลอาชีพ", image: "m.jpg" },
+      { id: "1", name: "ซาร่า", info: "นักฟุตบอลอาชีพ", image: "Mohamed_Salah_2018.jpg" },
+      { id: "2", name: "ซอน", info: "นักฟุตบอลอาชีพ", image: "f.jpg" },
+      { id: "3", name: "โอนาน่า", info: "นักฟุตบอลอาชีพ", image: "m.jpg" },
     ];
     for (let i = 4; i <= 150; i++) {
       candidates.push({
-        id: i,
+        id: i.toString(),
         name: `ผู้สมัคร ${i}`,
         info: `นโยบายของผู้สมัครหมายเลข ${i}`,
         image: `https://placehold.co/300x200?text=Candidate+${i}`
       });
     }
 
-    async function fetchHiddenCandidates() {
-      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
-      const docSnap = await getDoc(docRef);
-      return docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
+    const hiddenRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
+
+    async function getHiddenCandidates() {
+      const snap = await getDoc(hiddenRef);
+      if (!snap.exists()) {
+        await setDoc(hiddenRef, { hiddenCandidates: [] });
+        return [];
+      }
+      return snap.data().hiddenCandidates || [];
     }
 
     window.hideCandidate = async function (id) {
-      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
-      const docSnap = await getDoc(docRef);
-      const current = docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
+      const snap = await getDoc(hiddenRef);
+      const current = snap.exists() ? snap.data().hiddenCandidates || [] : [];
       if (!current.includes(id)) {
         current.push(id);
-        await updateDoc(docRef, { hiddenCandidates: current });
+        await updateDoc(hiddenRef, { hiddenCandidates: current });
       }
       location.reload();
     };
 
     window.unhideCandidate = async function (id) {
-      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
-      const docSnap = await getDoc(docRef);
-      let current = docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
+      const snap = await getDoc(hiddenRef);
+      let current = snap.exists() ? snap.data().hiddenCandidates || [] : [];
       current = current.filter(cid => cid !== id);
-      await updateDoc(docRef, { hiddenCandidates: current });
+      await updateDoc(hiddenRef, { hiddenCandidates: current });
       location.reload();
     };
 
@@ -216,16 +180,15 @@
 
       const voterRef = doc(db, "voters", voterName.toLowerCase());
       const voterDoc = await getDoc(voterRef);
-
       if (voterDoc.exists()) {
         alert("คุณได้โหวตไปแล้ว ไม่สามารถโหวตซ้ำได้อีก");
         return;
       }
 
-      const candidateRef = doc(db, "votes", candidateId.toString());
+      const candidateRef = doc(db, "votes", candidateId);
       try {
         await updateDoc(candidateRef, { count: increment(1) });
-      } catch (e) {
+      } catch {
         await setDoc(candidateRef, { count: 1 });
       }
 
@@ -249,48 +212,37 @@
       });
     };
 
+    const grid = document.getElementById("candidateGrid");
+
     (async () => {
-      const hidden = isAdmin ? await fetchHiddenCandidates() : [];
-      const grid = document.getElementById("candidateGrid");
+      const hidden = isAdmin ? await getHiddenCandidates() : [];
 
       candidates.forEach(c => {
+        if (!isAdmin && hidden.includes(c.id)) return;
+
         const div = document.createElement("div");
         div.className = "card";
+
         div.innerHTML = `
-  <img src="${c.image}" alt="${c.name}" />
-  <h3>${c.name}</h3>
-  <p>${c.info}</p>
-`;
+          <img src="${c.image}" alt="${c.name}" />
+          <h3>${c.name}</h3>
+          <p>${c.info}</p>
+        `;
 
+        const btn = document.createElement("button");
         if (isAdmin) {
-          const button = document.createElement("button");
-          button.textContent = hidden.includes(c.id) ? "♻️ คืนค่า" : "🗑️ ซ่อน";
-          button.onclick = () => {
-            if (hidden.includes(c.id)) {
-              window.unhideCandidate(c.id);
-            } else {
-              window.hideCandidate(c.id);
-            }
-          };
-          div.appendChild(button);
+          btn.textContent = hidden.includes(c.id) ? "♻️ คืนค่า" : "🗑️ ซ่อน";
+          btn.onclick = () => hidden.includes(c.id) ? unhideCandidate(c.id) : hideCandidate(c.id);
         } else {
-          const button = document.createElement("button");
-          if (voted) {
-            button.textContent = "โหวตแล้ว";
-            button.disabled = true;
-          } else {
-            button.textContent = "โหวต";
-            button.onclick = () => vote(c.id);
-          }
-          div.appendChild(button);
+          btn.textContent = voted ? "โหวตแล้ว" : "โหวต";
+          btn.disabled = !!voted;
+          if (!voted) btn.onclick = () => vote(c.id);
         }
 
-        if (!hidden.includes(c.id) || isAdmin) {
-          grid.appendChild(div);
-        }
+        div.appendChild(btn);
+        grid.appendChild(div);
       });
     })();
   </script>
 </body>
-
 </html>
