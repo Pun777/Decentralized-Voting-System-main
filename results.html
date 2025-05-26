@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,7 +9,7 @@
     body {
       font-family: "Segoe UI", sans-serif;
       background-color: #1e1e1e;
-      color: rgb(243, 234, 234);
+      color: white;
       margin: 0;
       padding: 0;
     }
@@ -20,33 +21,49 @@
 
     .actions {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       gap: 10px;
-      margin-bottom: 20px;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 999;
+      background-color: rgba(43, 43, 43, 0.9);
+      padding: 10px;
+      border-radius: 8px;
+      align-items: flex-end;
     }
 
-    .actions button {
+    .actions button,
+    .actions input {
       padding: 10px 15px;
       font-size: 14px;
       border: none;
       border-radius: 6px;
+      margin-top: 5px;
       cursor: pointer;
     }
 
-    .back-btn { background: #007bff; color: white; }
-    .logout-btn { background: #dc3545; color: white; }
+    .actions input {
+      width: 200px;
+      background-color: #fff;
+      color: #000;
+      border: 1px solid #ccc;
+    }
 
-    .section-title {
-      text-align: center;
-      margin-top: 30px;
-      font-size: 20px;
-      font-weight: bold;
+    .back-btn {
+      background: #007bff;
+      color: white;
+    }
+
+    .logout-btn {
+      background: #dc3545;
+      color: white;
     }
 
     .results {
       max-width: 900px;
       margin: auto;
-      padding: 20px;
+      padding: 120px 20px 20px;
     }
 
     .result-card {
@@ -73,7 +90,7 @@
 
     .percent {
       background: red;
-      color: rgb(255, 253, 253);
+      color: white;
       padding: 6px 10px;
       border-radius: 6px;
       font-weight: bold;
@@ -83,27 +100,9 @@
       font-size: 24px;
       margin-right: 10px;
     }
-
-    @media (max-width: 600px) {
-      .result-card {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .result-card img {
-        margin-bottom: 10px;
-      }
-
-      .name {
-        width: 100%;
-      }
-
-      .percent {
-        align-self: flex-end;
-      }
-    }
   </style>
 </head>
+
 <body>
   <header>
     <h1>📊 ผลการโหวต (เรียลไทม์)</h1>
@@ -113,115 +112,99 @@
   <div class="actions">
     <button class="back-btn" onclick="location.href='index.html'">⬅️ กลับหน้าโหวต</button>
     <button class="logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
+    <input type="text" placeholder="🔍 ค้นหาชื่อผู้สมัคร..." oninput="filterResults()" id="searchInput" />
   </div>
 
-  <div class="section-title">🏆 Top 10 อันดับสูงสุด</div>
-  <div class="results" id="top10List"></div>
+  <div class="results" id="resultsList"></div>
 
-  <div class="section-title">📋 ผู้สมัครทั้งหมด</div>
-  <div class="results" id="allList"></div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+  import {
+    getFirestore, collection, onSnapshot
+  } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
-    import {
-      getFirestore, collection, onSnapshot
-    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
+    authDomain: "votingproject-44e22.firebaseapp.com",
+    projectId: "votingproject-44e22",
+    storageBucket: "votingproject-44e22.firebasestorage.app",
+    messagingSenderId: "448413445889",
+    appId: "1:448413445889:web:0d22e92eed2a09d94ff500",
+    measurementId: "G-G6PT9V31VW"
+  };
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
-      authDomain: "votingproject-44e22.firebaseapp.com",
-      projectId: "votingproject-44e22",
-      storageBucket: "votingproject-44e22.firebasestorage.app",
-      messagingSenderId: "448413445889",
-      appId: "1:448413445889:web:0d22e92eed2a09d94ff500",
-      measurementId: "G-G6PT9V31VW"
-    };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
+  const voterName = localStorage.getItem("voterName");
+  if (!voterName) window.location.href = "login.html";
+  document.getElementById("welcomeText").innerText = `ยินดีต้อนรับ: ${voterName}`;
 
-    const voterName = localStorage.getItem("voterName");
-    const isAdmin = localStorage.getItem("isAdmin") === "true";
-    const hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
+  const candidates = [
+    { id: 1, name: "ซาร่า", info: "นักฟุตบอลอาชีพ", image: "Mohamed_Salah_2018.jpg" },
+    { id: 2, name: "ซอน", info: "นักฟุตบอลอาชีพ", image: "f.jpg" },
+    { id: 3, name: "โอนาน่า", info: "นักฟุตบอลอาชีพ", image: "m.jpg" },
+  ];
 
-    if (!voterName) window.location.href = "login.html";
-
-    document.getElementById("welcomeText").innerText =
-      `ยินดีต้อนรับ: ${voterName}${isAdmin ? " (Admin)" : ""}`;
-//เพิ่มชื่อ
-    const candidates = [];
-    candidates.push({ id: 1, name: "ซาร่า", image: "Mohamed_Salah_2018.jpg" });
-    candidates.push({ id: 2, name: "ซอน", image: "f.jpg" });
-      candidates.push({ id: 3, name: "โอนาน่า", image: "m.jpg" });
-    for (let i = 4; i <= 150; i++) {
-      candidates.push({
-        id: i,
-        name: `ผู้สมัคร ${i}`,
-        image: `https://placehold.co/300x200?text=Candidate+${i}`
-      });
-    }
-
-    const votesRef = collection(db, "votes");
-    const top10Div = document.getElementById("top10List");
-    const allListDiv = document.getElementById("allList");
-
-    onSnapshot(votesRef, (snapshot) => {
-      const voteMap = {};
-      snapshot.forEach(doc => {
-        voteMap[parseInt(doc.id)] = doc.data().count;
-      });
-
-      const merged = candidates.map(c => ({
-        ...c,
-        votes: voteMap[c.id] || 0
-      }));
-
-      const total = merged.reduce((sum, c) => sum + c.votes, 0);
-
-      // ✅ กรองผู้สมัครที่ไม่ได้ถูกซ่อน (เว้นให้ admin เห็นหมด)
-      const visible = merged.filter(c => !hidden.includes(c.id));
-      const sorted = [...visible].sort((a, b) => b.votes - a.votes);
-
-      // Top 10
-      top10Div.innerHTML = "";
-      sorted.slice(0, 10).forEach((c, index) => {
-        const percent = total ? ((c.votes / total) * 100).toFixed(2) : "0.00";
-        const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "";
-
-        const row = document.createElement("div");
-        row.className = "result-card";
-        row.innerHTML = `
-          <span class="medal">${medal}</span>
-          <img src="${c.image}" />
-          <div class="name">#${index + 1} ${c.name}</div>
-          <div class="percent">${percent}%</div>
-        `;
-        top10Div.appendChild(row);
-      });
-
-      // All candidates
-      allListDiv.innerHTML = "";
-      sorted.forEach((c, index) => {
-        const percent = total ? ((c.votes / total) * 100).toFixed(2) : "0.00";
-        const row = document.createElement("div");
-        row.className = "result-card";
-        row.innerHTML = `
-          <img src="${c.image}" />
-          <div class="name">#${index + 1} ${c.name}</div>
-          <div class="percent">${percent}%</div>
-        `;
-        allListDiv.appendChild(row);
-      });
+  for (let i = 4; i <= 150; i++) {
+    candidates.push({
+      id: i,
+      name: `ผู้สมัคร ${i}`,
+      info: `นโยบายของผู้สมัครหมายเลข ${i}`,
+      image: `https://placehold.co/300x200?text=Candidate+${i}`
     });
+  }
 
-    window.logout = function () {
-      localStorage.removeItem("voterName");
-      localStorage.removeItem("voted");
-      localStorage.removeItem("isAdmin");
-      window.location.href = "login.html";
-    };
-  </script>
+  const hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
+
+  const resultsRef = collection(db, "votes");
+  const resultsDiv = document.getElementById("resultsList");
+
+  onSnapshot(resultsRef, (snapshot) => {
+    const votes = {};
+    snapshot.forEach(doc => votes[doc.id] = doc.data().count);
+
+    const merged = candidates.map(c => ({
+      ...c,
+      votes: votes[c.id] || 0
+    })).filter(c => !hidden.includes(c.id) || isAdmin);
+
+    const total = merged.reduce((sum, c) => sum + c.votes, 0);
+    const sorted = [...merged].sort((a, b) => b.votes - a.votes);
+
+    resultsDiv.innerHTML = "";
+    sorted.forEach((c, i) => {
+      const percent = total ? ((c.votes / total) * 100).toFixed(2) : "0.00";
+      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
+
+      const row = document.createElement("div");
+      row.className = "result-card";
+      row.innerHTML = `
+        ${medal ? `<span class='medal'>${medal}</span>` : ""}
+        <img src="${c.image}" />
+        <div class="name">#${i + 1} ${c.name}</div>
+        <div class="percent">${percent}%</div>
+      `;
+      resultsDiv.appendChild(row);
+    });
+  });
+
+  window.logout = function () {
+    localStorage.clear();
+    location.href = "login.html";
+  };
+
+  window.filterResults = function () {
+    const query = document.getElementById("searchInput").value.toLowerCase();
+    const cards = document.querySelectorAll(".result-card");
+    cards.forEach(card => {
+      const name = card.querySelector(".name").textContent.toLowerCase();
+      card.style.display = name.includes(query) ? "flex" : "none";
+    });
+  };
+</script>
+
 </body>
+
 </html>

@@ -3,112 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>เข้าสู่ระบบ - ระบบโหวต</title>
+  <title>เข้าสู่ระบบ</title>
   <style>
-    :root {
-      --primary: #007bff;
-      --dark-bg: #1e1e1e;
-      --white: #ffffff;
-      --gray: #ccc;
-    }
-
     body {
-      margin: 0;
+      background: #2b2b2b;
+      color: white;
       font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      color: var(--dark-bg);
+      height: 100vh;
     }
-
     .login-box {
-      background-color: var(--white);
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-      width: 100%;
-      max-width: 400px;
+      background: #3a3a3a;
+      padding: 30px;
+      border-radius: 12px;
       text-align: center;
-      transition: 0.3s ease;
     }
-
-    .login-box h1 {
-      margin-bottom: 8px;
-      font-size: 28px;
-      color: #222;
-    }
-
-    .login-box p {
-      margin-bottom: 20px;
-      font-size: 14px;
-      color: #555;
-    }
-
-    .login-box input[type="text"] {
-      width: 100%;
-      padding: 12px;
+    button {
+      padding: 12px 20px;
       font-size: 16px;
-      border: 1px solid var(--gray);
-      border-radius: 8px;
-      margin-bottom: 20px;
-      box-sizing: border-box;
-      transition: 0.2s;
-    }
-
-    .login-box input[type="text"]:focus {
-      border-color: var(--primary);
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
-    }
-
-    .login-box button {
-      width: 100%;
-      padding: 12px;
-      background-color: var(--primary);
+      background-color: #4285f4;
+      color: white;
       border: none;
-      border-radius: 8px;
-      color: var(--white);
-      font-size: 16px;
+      border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.2s;
     }
-
-    .login-box button:hover {
-      background-color: #0056b3;
-    }
-
-    .error {
-      color: red;
-      font-size: 13px;
-      margin-bottom: 10px;
-      display: none;
-    }
-
-    @media (max-width: 480px) {
-      .login-box {
-        padding: 25px;
-        border-radius: 12px;
-      }
+    h1 {
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
   <div class="login-box">
-    <h1>🗳️ ระบบโหวต</h1>
-    <p>กรุณากรอกชื่อของคุณเพื่อเข้าสู่ระบบ</p>
-    <form onsubmit="goToVoting(event)">
-      <input type="text" id="name" placeholder="ชื่อของคุณ" autocomplete="off" />
-      <div id="errorText" class="error">กรุณากรอกชื่อ</div>
-      <button type="submit">เข้าสู่ระบบ</button>
-    </form>
+    <h1>🗳️ เข้าสู่ระบบ</h1>
+    <button id="loginBtn">🔐 ลงชื่อเข้าใช้ด้วย Google</button>
   </div>
 
-  <!-- Optional: Firebase SDK (ไม่จำเป็นสำหรับ local login) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
@@ -121,33 +55,23 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-  </script>
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-  <script>
-    function goToVoting(event) {
-      event.preventDefault();
-      const nameInput = document.getElementById("name");
-      const errorText = document.getElementById("errorText");
-      const name = nameInput.value.trim();
-
-      if (!name) {
-        errorText.style.display = "block";
-        nameInput.focus();
-        return;
+    document.getElementById("loginBtn").onclick = async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        localStorage.setItem("uid", user.uid);
+        localStorage.setItem("displayName", user.displayName);
+        localStorage.setItem("email", user.email);
+        localStorage.setItem("photo", user.photoURL);
+        window.location.href = "index.html";
+      } catch (error) {
+        alert("เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+        console.error(error);
       }
-
-      errorText.style.display = "none";
-      localStorage.setItem("voterName", name);
-
-      if (name.toLowerCase() === "admin") {
-        localStorage.setItem("isAdmin", "true");
-      } else {
-        localStorage.removeItem("isAdmin");
-      }
-
-      window.location.href = "index.html";
-    }
+    };
   </script>
 </body>
 </html>
