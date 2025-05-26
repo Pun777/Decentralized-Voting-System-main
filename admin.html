@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>👑 ผู้ดูแลระบบ</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #1e1e1e;
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #555;
+    }
+
+    th {
+      background-color: #333;
+    }
+
+    tr:hover {
+      background-color: #444;
+    }
+
+    .back-btn {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>👑 รายชื่อผู้โหวตทั้งหมด</h1>
+  <button class="back-btn" onclick="location.href='index.html'">⬅️ กลับ</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>ชื่อผู้ใช้</th>
+        <th>โหวตให้ผู้สมัคร</th>
+      </tr>
+    </thead>
+    <tbody id="voterList"></tbody>
+  </table>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    // ✅ ตรวจสิทธิ์ admin ก่อนเข้าถึง
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
+    if (!isAdmin) {
+      alert("คุณไม่มีสิทธิ์เข้าถึงหน้านี้");
+      window.location.href = "index.html";
+    }
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
+      authDomain: "votingproject-44e22.firebaseapp.com",
+      projectId: "votingproject-44e22",
+      storageBucket: "votingproject-44e22.firebasestorage.app",
+      messagingSenderId: "448413445889",
+      appId: "1:448413445889:web:0d22e92eed2a09d94ff500",
+      measurementId: "G-G6PT9V31VW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const voterList = document.getElementById("voterList");
+    const snapshot = await getDocs(collection(db, "voters"));
+
+    let i = 1;
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i++}</td>
+        <td>${data.name || doc.id}</td>
+        <td>ผู้สมัครหมายเลข ${data.voted}</td>
+      `;
+      voterList.appendChild(tr);
+    });
+  </script>
+</body>
+</html>
