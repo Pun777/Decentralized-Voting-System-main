@@ -62,10 +62,16 @@
       try {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
+
+        // บันทึกข้อมูลผู้ใช้ลง localStorage
         localStorage.setItem("uid", user.uid);
         localStorage.setItem("displayName", user.displayName);
+        localStorage.setItem("voterName", user.displayName); // ✅ สำคัญที่สุด
         localStorage.setItem("email", user.email);
         localStorage.setItem("photo", user.photoURL);
+        localStorage.setItem("isAdmin", "false"); // ถ้ายังไม่มีระบบ admin ให้ใส่ false ไปก่อน
+
+        // ไปหน้าโหวต
         window.location.href = "index.html";
       } catch (error) {
         alert("เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
