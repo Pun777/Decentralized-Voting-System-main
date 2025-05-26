@@ -77,7 +77,7 @@
       apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
       authDomain: "votingproject-44e22.firebaseapp.com",
       projectId: "votingproject-44e22",
-      storageBucket: "votingproject-44e22.firebasestorage.app",
+      storageBucket: "votingproject-44e22.appspot.com",
       messagingSenderId: "448413445889",
       appId: "1:448413445889:web:0d22e92eed2a09d94ff500",
       measurementId: "G-G6PT9V31VW"
@@ -96,8 +96,8 @@
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${i++}</td>
-          <td>${data.name || doc.id}</td>
-          <td>ผู้สมัครหมายเลข ${data.voted}</td>
+          <td>${doc.id}</td>
+          <td>${data.voted ? `ผู้สมัครหมายเลข ${data.voted}` : "ยังไม่ได้โหวต"}</td>
         `;
         voterList.appendChild(tr);
       });

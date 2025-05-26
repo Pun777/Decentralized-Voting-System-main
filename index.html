@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -13,16 +12,10 @@
       margin: 0;
       padding: 0;
     }
-    header {
-      text-align: center;
-      padding: 20px;
-    }
+    header { text-align: center; padding: 20px; }
     .actions {
-      display: flex;
-      gap: 10px;
-      position: fixed;
-      top: 20px;
-      right: 20px;
+      display: flex; gap: 10px;
+      position: fixed; top: 20px; right: 20px;
       z-index: 999;
       background-color: rgba(43, 43, 43, 0.9);
       padding: 10px;
@@ -30,8 +23,7 @@
       flex-direction: column;
       align-items: flex-end;
     }
-    .actions button,
-    .actions input {
+    .actions button, .actions input {
       padding: 10px 15px;
       font-size: 14px;
       border: none;
@@ -84,12 +76,6 @@
     .card button:disabled {
       background: gray;
       cursor: not-allowed;
-    }
-    @media (max-width: 600px) {
-      .actions {
-        right: 10px;
-        top: 10px;
-      }
     }
   </style>
 </head>
@@ -159,25 +145,34 @@
 
     window.hideCandidate = async function (id) {
       const snap = await getDoc(hiddenRef);
-      const current = snap.exists() ? snap.data().hiddenCandidates || [] : [];
-      if (!current.includes(id)) {
-        current.push(id);
-        await updateDoc(hiddenRef, { hiddenCandidates: current });
+      let current = [];
+      if (snap.exists()) {
+        current = snap.data().hiddenCandidates || [];
+        if (!current.includes(id)) {
+          current.push(id);
+          await updateDoc(hiddenRef, { hiddenCandidates: current });
+        }
+      } else {
+        await setDoc(hiddenRef, { hiddenCandidates: [id] });
       }
       location.reload();
     };
 
     window.unhideCandidate = async function (id) {
       const snap = await getDoc(hiddenRef);
-      let current = snap.exists() ? snap.data().hiddenCandidates || [] : [];
-      current = current.filter(cid => cid !== id);
-      await updateDoc(hiddenRef, { hiddenCandidates: current });
+      let current = [];
+      if (snap.exists()) {
+        current = snap.data().hiddenCandidates || [];
+        current = current.filter(cid => cid !== id);
+        await updateDoc(hiddenRef, { hiddenCandidates: current });
+      } else {
+        await setDoc(hiddenRef, { hiddenCandidates: [] });
+      }
       location.reload();
     };
 
     window.vote = async function (candidateId) {
       if (isAdmin || voted) return;
-
       const voterRef = doc(db, "voters", voterName.toLowerCase());
       const voterDoc = await getDoc(voterRef);
       if (voterDoc.exists()) {
