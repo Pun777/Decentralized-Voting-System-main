@@ -67,7 +67,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-    // ✅ ตรวจสิทธิ์ admin ก่อนเข้าถึง
     const isAdmin = localStorage.getItem("isAdmin") === "true";
     if (!isAdmin) {
       alert("คุณไม่มีสิทธิ์เข้าถึงหน้านี้");
@@ -88,19 +87,23 @@
     const db = getFirestore(app);
 
     const voterList = document.getElementById("voterList");
-    const snapshot = await getDocs(collection(db, "voters"));
 
-    let i = 1;
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${i++}</td>
-        <td>${data.name || doc.id}</td>
-        <td>ผู้สมัครหมายเลข ${data.voted}</td>
-      `;
-      voterList.appendChild(tr);
-    });
+    async function loadVoters() {
+      const snapshot = await getDocs(collection(db, "voters"));
+      let i = 1;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${i++}</td>
+          <td>${data.name || doc.id}</td>
+          <td>ผู้สมัครหมายเลข ${data.voted}</td>
+        `;
+        voterList.appendChild(tr);
+      });
+    }
+
+    loadVoters();
   </script>
 </body>
 </html>

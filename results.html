@@ -108,103 +108,87 @@
     <h1>📊 ผลการโหวต (เรียลไทม์)</h1>
     <p id="welcomeText"></p>
   </header>
-
   <div class="actions">
     <button class="back-btn" onclick="location.href='index.html'">⬅️ กลับหน้าโหวต</button>
     <button class="logout-btn" onclick="logout()">🚪 ออกจากระบบ</button>
     <input type="text" placeholder="🔍 ค้นหาชื่อผู้สมัคร..." oninput="filterResults()" id="searchInput" />
   </div>
-
   <div class="results" id="resultsList"></div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-  import {
-    getFirestore, collection, onSnapshot
-  } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
+      authDomain: "votingproject-44e22.firebaseapp.com",
+      projectId: "votingproject-44e22",
+      storageBucket: "votingproject-44e22.firebasestorage.app",
+      messagingSenderId: "448413445889",
+      appId: "1:448413445889:web:0d22e92eed2a09d94ff500",
+      measurementId: "G-G6PT9V31VW"
+    };
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
-    authDomain: "votingproject-44e22.firebaseapp.com",
-    projectId: "votingproject-44e22",
-    storageBucket: "votingproject-44e22.firebasestorage.app",
-    messagingSenderId: "448413445889",
-    appId: "1:448413445889:web:0d22e92eed2a09d94ff500",
-    measurementId: "G-G6PT9V31VW"
-  };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const voterName = localStorage.getItem("voterName");
+    if (!voterName) window.location.href = "login.html";
+    document.getElementById("welcomeText").innerText = `ยินดีต้อนรับ: ${voterName}`;
+    const settingsRef = doc(db, "settings", "general");
+    let hidden = [];
 
-  const voterName = localStorage.getItem("voterName");
-  if (!voterName) window.location.href = "login.html";
-  document.getElementById("welcomeText").innerText = `ยินดีต้อนรับ: ${voterName}`;
-
-  const candidates = [
-    { id: 1, name: "ซาร่า", info: "นักฟุตบอลอาชีพ", image: "Mohamed_Salah_2018.jpg" },
-    { id: 2, name: "ซอน", info: "นักฟุตบอลอาชีพ", image: "f.jpg" },
-    { id: 3, name: "โอนาน่า", info: "นักฟุตบอลอาชีพ", image: "m.jpg" },
-  ];
-
-  for (let i = 4; i <= 150; i++) {
-    candidates.push({
-      id: i,
-      name: `ผู้สมัคร ${i}`,
-      info: `นโยบายของผู้สมัครหมายเลข ${i}`,
-      image: `https://placehold.co/300x200?text=Candidate+${i}`
+    onSnapshot(settingsRef, (docSnap) => {
+      hidden = docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
+      renderResults(); // โหลดผลคะแนนเมื่อ hidden มาแล้ว
     });
-  }
 
-  const hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
-  const isAdmin = localStorage.getItem("isAdmin") === "true";
+    function renderResults() {
+      onSnapshot(resultsRef, (snapshot) => {
+        const votes = {};
+        snapshot.forEach(doc => votes[doc.id] = doc.data().count);
 
-  const resultsRef = collection(db, "votes");
-  const resultsDiv = document.getElementById("resultsList");
+        const merged = candidates.map(c => ({
+          ...c,
+          votes: votes[c.id] || 0
+        })).filter(c => !hidden.includes(c.id));
 
-  onSnapshot(resultsRef, (snapshot) => {
-    const votes = {};
-    snapshot.forEach(doc => votes[doc.id] = doc.data().count);
+        const total = merged.reduce((sum, c) => sum + c.votes, 0);
+        const sorted = [...merged].sort((a, b) => b.votes - a.votes);
 
-    const merged = candidates.map(c => ({
-      ...c,
-      votes: votes[c.id] || 0
-    })).filter(c => !hidden.includes(c.id) || isAdmin);
+        resultsDiv.innerHTML = "";
+        sorted.forEach((c, i) => {
+          const percent = total ? ((c.votes / total) * 100).toFixed(2) : "0.00";
+          const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
 
-    const total = merged.reduce((sum, c) => sum + c.votes, 0);
-    const sorted = [...merged].sort((a, b) => b.votes - a.votes);
-
-    resultsDiv.innerHTML = "";
-    sorted.forEach((c, i) => {
-      const percent = total ? ((c.votes / total) * 100).toFixed(2) : "0.00";
-      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
-
-      const row = document.createElement("div");
-      row.className = "result-card";
-      row.innerHTML = `
+          const row = document.createElement("div");
+          row.className = "result-card";
+          row.innerHTML = `
         ${medal ? `<span class='medal'>${medal}</span>` : ""}
         <img src="${c.image}" />
         <div class="name">#${i + 1} ${c.name}</div>
         <div class="percent">${percent}%</div>
       `;
-      resultsDiv.appendChild(row);
-    });
-  });
+          resultsDiv.appendChild(row);
+        });
+      });
+    }
 
-  window.logout = function () {
-    localStorage.clear();
-    location.href = "login.html";
-  };
 
-  window.filterResults = function () {
-    const query = document.getElementById("searchInput").value.toLowerCase();
-    const cards = document.querySelectorAll(".result-card");
-    cards.forEach(card => {
-      const name = card.querySelector(".name").textContent.toLowerCase();
-      card.style.display = name.includes(query) ? "flex" : "none";
-    });
-  };
-</script>
+    window.logout = function () {
+      localStorage.clear();
+      location.href = "login.html";
+    };
 
+    window.filterResults = function () {
+      const query = document.getElementById("searchInput").value.toLowerCase();
+      const cards = document.querySelectorAll(".result-card");
+      cards.forEach(card => {
+        const name = card.querySelector(".name").textContent.toLowerCase();
+        card.style.display = name.includes(query) ? "flex" : "none";
+      });
+    };
+  </script>
 </body>
 
 </html>
