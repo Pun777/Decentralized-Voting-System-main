@@ -157,6 +157,16 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    async function fetchHiddenCandidates() {
+      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2"); // ใช้ doc id ตามในภาพ
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return docSnap.data().hiddenCandidates || [];
+      } else {
+        return [];
+      }
+    }
+
 
     const voterName = localStorage.getItem("voterName");
     const isAdmin = localStorage.getItem("isAdmin") === "true";
@@ -186,27 +196,31 @@
       });
     }
 
-    const grid = document.getElementById("candidateGrid");
-    candidates.forEach(c => {
-      const div = document.createElement("div");
-      div.className = "card";
-      div.innerHTML = `
-        <img src="${c.image}" alt="${c.name}" />
-        <h3>${c.name}</h3>
-        <p>${c.info}</p>
-        ${isAdmin
-          ? (hidden.includes(c.id)
-            ? `<button onclick="unhideCandidate(${c.id})">♻️ คืนค่า</button>`
-            : `<button onclick="hideCandidate(${c.id})">🗑️ ซ่อน</button>`)
-          : voted
-            ? `<button disabled>โหวตแล้ว</button>`
-            : `<button onclick="vote(${c.id})">โหวต</button>`
+    (async () => {
+      const hidden = isAdmin ? await fetchHiddenCandidates() : [];
+      const grid = document.getElementById("candidateGrid");
+
+      candidates.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+      <img src="${c.image}" alt="${c.name}" />
+      <h3>${c.name}</h3>
+      <p>${c.info}</p>
+      ${isAdmin
+            ? (hidden.includes(c.id)
+              ? `<button onclick="unhideCandidate(${c.id})">♻️ คืนค่า</button>`
+              : `<button onclick="hideCandidate(${c.id})">🗑️ ซ่อน</button>`)
+            : voted
+              ? `<button disabled>โหวตแล้ว</button>`
+              : `<button onclick="vote(${c.id})">โหวต</button>`
+          }
+    `;
+        if (!hidden.includes(c.id) || isAdmin) {
+          grid.appendChild(div);
         }
-      `;
-      if (!hidden.includes(c.id) || isAdmin) {
-        grid.appendChild(div);
-      }
-    });
+      });
+    })();
 
 
 
@@ -239,19 +253,26 @@
       window.location.href = "login.html";
     };
 
-    window.hideCandidate = function (id) {
-      const hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
-      if (!hidden.includes(id)) hidden.push(id);
-      localStorage.setItem("hiddenCandidates", JSON.stringify(hidden));
+    window.hideCandidate = async function (id) {
+      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
+      const docSnap = await getDoc(docRef);
+      const current = docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
+      if (!current.includes(id)) {
+        current.push(id);
+        await updateDoc(docRef, { hiddenCandidates: current });
+      }
       location.reload();
     };
 
-    window.unhideCandidate = function (id) {
-      let hidden = JSON.parse(localStorage.getItem("hiddenCandidates") || "[]");
-      hidden = hidden.filter(cid => cid !== id);
-      localStorage.setItem("hiddenCandidates", JSON.stringify(hidden));
+    window.unhideCandidate = async function (id) {
+      const docRef = doc(db, "general", "pBV3BaBslgTWWFAJskT4WFD5HZ2");
+      const docSnap = await getDoc(docRef);
+      let current = docSnap.exists() ? docSnap.data().hiddenCandidates || [] : [];
+      current = current.filter(cid => cid !== id);
+      await updateDoc(docRef, { hiddenCandidates: current });
       location.reload();
     };
+
 
     window.filterCards = function () {
       const query = document.getElementById("searchInput").value.toLowerCase();
