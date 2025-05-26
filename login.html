@@ -43,6 +43,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAFBySimQfmNHWB-yTs5pNjOz8XyXDr8Vk",
@@ -56,6 +57,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
     document.getElementById("loginBtn").onclick = async () => {
@@ -63,15 +65,30 @@
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
 
-        // บันทึกข้อมูลผู้ใช้ลง localStorage
+        // 🔍 ดึงสิทธิ์ admin จาก Firestore
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        let isAdmin = false;
+        if (userSnap.exists()) {
+          isAdmin = userSnap.data().isAdmin === true;
+        } else {
+          // ถ้ายังไม่มี user ใน Firestore ให้เพิ่มไว้ด้วย
+          await setDoc(userRef, {
+            displayName: user.displayName,
+            isAdmin: false
+          });
+        }
+
+        // ✅ เก็บข้อมูลใน localStorage
         localStorage.setItem("uid", user.uid);
         localStorage.setItem("displayName", user.displayName);
-        localStorage.setItem("voterName", user.displayName); // ✅ สำคัญที่สุด
+        localStorage.setItem("voterName", user.displayName);
         localStorage.setItem("email", user.email);
         localStorage.setItem("photo", user.photoURL);
-        localStorage.setItem("isAdmin", "false"); // ถ้ายังไม่มีระบบ admin ให้ใส่ false ไปก่อน
+        localStorage.setItem("isAdmin", isAdmin.toString()); // ← ใช้ค่า boolean จริง
 
-        // ไปหน้าโหวต
+        // 👉 ไปหน้า index
         window.location.href = "index.html";
       } catch (error) {
         alert("เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
